@@ -10,6 +10,7 @@
     "@types/bcrypt": "^5.0.2",
     "@types/bun": "latest",
     "@types/cors": "^2.8.17",
+    "@types/jsonwebtoken": "^9.0.9",
     "prisma": "^6.4.1",
     "tsx": "^4.19.3"
   },

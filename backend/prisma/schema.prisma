@@ -14,10 +14,11 @@ datasource db {
 }
 
 model Users {
-    id       Int    @id @default(autoincrement())
-    name     String
-    email    String @unique
-    password String
+    id           Int     @id @default(autoincrement())
+    name         String
+    email        String  @unique
+    password     String
+    refreshToken String? @map("refresh_token")
 
     @@map("users")
 }
