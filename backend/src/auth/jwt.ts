@@ -29,22 +29,26 @@ export async function verfiyJwt(
   res: Response,
   next: NextFunction,
 ) {
-  const authHeaders = req.headers.authorization || req.headers.Authorization
-  //@ts-ignore
-  if (!authHeaders || !authHeaders?.startsWith("Bearer ")) {
-    res.status(401).json({ payload: "Authorization failed" })
-  }
-  //@ts-ignore
-  const token = authHeaders.split(" ")[1]
-  const payload = jwt.verify(
-    token,
-    Bun.env.ACCESS_TOKEN_SECRET!,
-  ) as jwt.JwtPayload
+  try {
+    const authHeaders = req.headers.authorization || req.headers.Authorization
+    //@ts-ignore
+    if (!authHeaders || !authHeaders?.startsWith("Bearer ")) {
+      res.status(401).json({ payload: "Authorization failed" })
+    }
+    //@ts-ignore
+    const token = authHeaders.split(" ")[1]
+    const payload = jwt.verify(
+      token,
+      Bun.env.ACCESS_TOKEN_SECRET!,
+    ) as jwt.JwtPayload
 
-  req.user = {
-    id: payload.userInfo.id,
-    email: payload.userInfo.email,
-  }
+    req.user = {
+      id: payload.userInfo.id,
+      email: payload.userInfo.email,
+    }
 
-  next()
+    next()
+  } catch (err: any) {
+    res.status(500).json({ err: err.message })
+  }
 }

@@ -1,5 +1,5 @@
 import * as jwt from "jsonwebtoken"
-import { Router } from "express"
+import { Router, type Request } from "express"
 import { z } from "zod"
 import { prisma } from "../config"
 import { generateRefreshToken, generateAccessToken } from "./jwt"
@@ -55,7 +55,8 @@ authRoute.post("/signup", async (req, res) => {
     res
       .cookie("refreshToken", user.refreshToken, {
         httpOnly: true,
-        // sameSite: true,
+        sameSite: true,
+        secure: true,
       })
       .status(200)
       .json({ accessToken })
@@ -84,10 +85,16 @@ authRoute.post("/login", async (req, res) => {
       res.status(403).json({ payload: "Invalid password" })
     }
     const accessToken = generateAccessToken(user)
+    const refreshToken = generateRefreshToken(user.email)
+    await prisma.users.update({
+      where: { id: user.id },
+      data: { refreshToken: refreshToken },
+    })
     res
-      .cookie("refreshToken", user.refreshToken, {
+      .cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        sameSite: true,
+        // sameSite: true,
+        secure: true,
       })
       .status(200)
       .json({ accessToken })
@@ -96,16 +103,19 @@ authRoute.post("/login", async (req, res) => {
   }
 })
 
-authRoute.get("/access-token", async (req, res) => {
+authRoute.get("/access-token", async (req: Request, res) => {
   try {
     const cookies = req.cookies
-    if (cookies?.refreshToken) {
+    console.log(cookies)
+    if (!cookies?.refreshToken) {
       res
         .status(403)
         .json({ message: "Refresh Token not available in cookies" })
       return
     }
-    const user = await prisma.users.findUnique({ where: { id: req.user?.id } })
+    const user = await prisma.users.findFirst({
+      where: { email: req.user?.email },
+    })
     if (!user || user?.refreshToken != cookies.refreshToken) {
       res.status(403).json({ message: "Invalid refresh Token" })
       return
@@ -115,6 +125,7 @@ authRoute.get("/access-token", async (req, res) => {
     const accessToken = generateAccessToken(user)
     res.status(200).json({ accessToken })
   } catch (err) {
+    console.log(err)
     res.status(500).json(err)
   }
 })

@@ -1,14 +1,15 @@
 import express from "express"
 import cors from "cors"
 import { prisma } from "./config"
-import route from "./auth"
+import route from "./router.ts"
 import { generateRefreshToken } from "./auth/jwt"
+import cookieParser from "cookie-parser"
 
 const app = express()
 
 app.use(express.json())
 app.use(cors())
-
+app.use(cookieParser())
 async function seed() {
   try {
     const users = [
