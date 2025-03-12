@@ -1,14 +1,20 @@
 import * as jwt from "jsonwebtoken"
-import { type Users } from "@prisma/client"
 import { type Request, type Response, type NextFunction } from "express"
 
-export function generateAccessToken(user: Users) {
+export function generateAccessToken({
+  id,
+  email,
+}: {
+  id: number
+  name: string
+  email: string
+}) {
   const accessToken = jwt.sign(
     {
-      userInfo: { id: user.id, email: user.email },
+      userInfo: { id: id, email: email },
     },
     Bun.env.ACCESS_TOKEN_SECRET!,
-    { expiresIn: "5min" },
+    { expiresIn: "10min" },
   )
   return accessToken
 }

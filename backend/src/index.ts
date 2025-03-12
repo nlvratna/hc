@@ -37,11 +37,11 @@ async function seed() {
     console.log(err)
   }
 }
-app.get("/", async (req, res) => {
+app.get("/", async (_req, res) => {
   res.send("hell")
 })
 
-app.get("/seed", async (req, res) => {
+app.get("/seed", async (_req, res) => {
   await seed()
   res.send("seeding completed")
 })

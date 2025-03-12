@@ -49,11 +49,16 @@ authRoute.post("/signup", async (req, res) => {
         password: hashedPass,
         refreshToken: refreshToken,
       },
+      select: {
+        name: true,
+        email: true,
+        id: true,
+      },
     })
     console.log("code was here")
     const accessToken = generateAccessToken(user)
     res
-      .cookie("refreshToken", user.refreshToken, {
+      .cookie("refreshToken", refreshToken, {
         httpOnly: true,
         sameSite: true,
         secure: true,
@@ -93,7 +98,7 @@ authRoute.post("/login", async (req, res) => {
     res
       .cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        // sameSite: true,
+        sameSite: true,
         secure: true,
       })
       .status(200)

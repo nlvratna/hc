@@ -22,10 +22,24 @@ model Users {
 }
 
 model healthRecord {
-    id       Int      @id @default(autoincrement())
-    Symptoms String[]
-    user     Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId   Int      @unique
+    id            Int          @id @default(autoincrement())
+    age           Int
+    gender        String
+    familyHistory String[]
+    user          Users        @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId        Int          @unique
+    symptoms      medication[]
 
     @@map("health_record")
+}
+
+//TODO: add symptoms table and organise health_record table
+
+model medication {
+    id             Int          @id @default(autoincrement())
+    name           String
+    reportedAt     DateTime
+    prescription   String
+    healthRecord   healthRecord @relation(fields: [healthRecordId], references: [id], onDelete: Cascade)
+    healthRecordId Int
 }
