@@ -28,15 +28,18 @@ botRouter.post("/remedies", async (req, res) => {
   console.log(healthRecord)
   let result
   if (healthRecord) {
-    const prompt = `${initialPrompt} this is the healtRecord of the user ${healthRecord} and their current symtoms ${symptoms}`
+    const prompt = `${initialPrompt} this is the healtRecord of the user ${healthRecord} and inital symptoms user gave ${symptoms}`
     result = await model.generateContent(prompt)
-    console.log(result)
+    console.log(result.response.text())
   } else {
-    const prompt = `${initialPrompt} symtoms of the user ${symptoms} sorry user has no healthRecord`
+    const prompt = `${initialPrompt} the initial symtoms user gave ${symptoms} sorry user has no healthRecord`
     result = await model.generateContent(prompt)
+    console.log(result.response.text())
   }
 
-  res.json({ result })
+  res.json({ payload: result.response.text().split("\n") })
+  // test this
 })
-
+// Note : might need a ws connection? No
+// the user sends the request to the same route
 export default botRouter
