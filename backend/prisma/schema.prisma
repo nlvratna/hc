@@ -23,7 +23,7 @@ model Users {
 
 model healthRecord {
     id            Int          @id @default(autoincrement())
-    age           Int
+    age           DateTime     @db.Date
     gender        String
     familyHistory String[]
     user          Users        @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -33,13 +33,12 @@ model healthRecord {
     @@map("health_record")
 }
 
-//TODO: add symptoms table and organise health_record table
-
+// add table to store chat data and map to user if necessary
 model medication {
     id             Int          @id @default(autoincrement())
     name           String
     reportedAt     DateTime
     prescription   String
-    healthRecord   healthRecord @relation(fields: [healthRecordId], references: [id], onDelete: Cascade)
+    healthRecord   healthRecord @relation(fields: [healthRecordId], references: [id])
     healthRecordId Int
 }
