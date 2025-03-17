@@ -29,6 +29,7 @@ interface TextPart {
 // database is the better option but workd for now
 const content: Content[] = []
 
+//test change
 botRouter.post("/remedies", async (req, res) => {
   const id = req.user?.id
   const symptoms = req.body.symptoms
