@@ -15,6 +15,7 @@ const RegisterSchema = z.object({
     .string({ required_error: "password is required" })
     .min(6, "Password length is less than 6"),
 })
+
 const LoginSchema = z.object({
   email: z
     .string({ required_error: "Email is required" })

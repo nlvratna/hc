@@ -37,7 +37,7 @@ model healthRecord {
 model medication {
     id             Int          @id @default(autoincrement())
     name           String
-    reportedAt     DateTime
+    reportedAt     DateTime     @db.Date
     prescription   String
     healthRecord   healthRecord @relation(fields: [healthRecordId], references: [id])
     healthRecordId Int

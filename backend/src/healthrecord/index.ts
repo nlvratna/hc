@@ -1,6 +1,6 @@
-import { Router, type Request } from "express"
+import { Router, type Request, type Response } from "express"
 import { prisma } from "../../prisma"
-import type { medication } from "@prisma/client"
+import { Prisma } from "@prisma/client"
 
 const healthRecordRoute = Router()
 
@@ -23,7 +23,7 @@ healthRecordRoute.get("/health-record", async (req, res) => {
 })
 
 type RequestBody = {
-  age: number
+  age: Date
   gender: string
   familyHistory: string[]
   Medication: medicationData[]
@@ -53,21 +53,82 @@ healthRecordRoute.post(
           userId: id,
         },
       })
+
       res.json({ healthRecord })
     } catch (err) {
-      res.status(500).json({ err })
+      console.log(err)
+      if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        if ((err.code = "P2002")) {
+          res.status(422).json({ err: "user HealthRecord already exists" })
+        }
+      } else {
+        res.status(500).json({ err })
+      }
     }
   },
 )
 
-// chane primary details  age family History gender
-healthRecordRoute.patch("/update-primary-health-record", async (req, res) => {})
+// change primary details  age family History gender
+healthRecordRoute.patch("/update-primary-health-record", async (req, res) => {
+  try {
+    const id = req.user?.id
+
+    const data = req.body
+    if (!id) {
+      res.status(400).json({ err: "user Id is not found" })
+    }
+
+    const healthRecord = await prisma.healthRecord.update({
+      where: { userId: id },
+      data: data,
+    })
+    res.json(healthRecord)
+  } catch (err) {
+    res.status(500).json({ err })
+  }
+})
 
 // id - medication id
 // change medication details
-healthRecordRoute.patch("/change-medication-data/:id", async (req, res) => {})
+healthRecordRoute.patch("/change-medical-data/:id", async (req, res) => {
+  try {
+    const userId = req.user?.id
+    const id = req.params.id
+    if (!id || userId) {
+      res.status(400).json({ err: "user Id is not found" })
+    }
+    const data = req.body
+    const medicaldata = await prisma.medication.update({
+      where: { id: parseInt(id), healthRecord: { userId: userId } },
+      data: data,
+    })
+    res.json(medicaldata)
+  } catch (err) {
+    res.status(500).json({ err })
+  }
+})
 
 // add new medical record
-healtRecord.post("/add-medical-data", async (req, res) => {})
+healthRecordRoute.post("/add-medical-data", async (req, res: Response) => {
+  try {
+    const userId = req.user?.id
+    const data = req.body
+    const medicalData = await prisma.medication.create({
+      data: {
+        name: data.name,
+        prescription: data.prescription,
+        reportedAt: data.reportedAt,
+        healthRecord: { connect: { userId: userId } },
+      },
+      include: { healthRecord: true },
+    })
+    res.json(medicalData)
+  } catch (err) {
+    console.log(err)
+    res.status(400).json({ err })
+  }
+})
 
 //TODO : add delete route
+
+export default healthRecordRoute

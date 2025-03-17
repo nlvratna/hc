@@ -30,22 +30,35 @@ const content: Content[] = []
 
 //test change
 botRouter.post("/remedies", async (req, res) => {
-  const id = req.user?.id
-  const symptoms = req.body.symptoms
-
   try {
+    const id = req.user?.id
+    const symptoms = req.body.symptoms
+    if (!id || !symptoms) {
+      res.status(400).json({ error: "required data is not present" })
+    }
     const healthRecord = await prisma.healthRecord.findFirst({
       where: {
         userId: id,
       },
       select: {
-        symptoms: true,
+        symptoms: {
+          select: {
+            id: false,
+            name: true,
+            prescription: true,
+            reportedAt: true,
+          },
+        },
+        id: false,
+        age: true,
+        gender: true,
       },
     })
+    console.log(healthRecord)
     let result
     if (content.length === 0) {
       if (healthRecord) {
-        const prompt = `  My health Record ${healthRecord} and my  symptoms  are  ${symptoms}`
+        const prompt = `  My health Record ${JSON.stringify(healthRecord)} and my  symptoms  are  ${symptoms}`
         const newContent: Content = {
           role: ROLE.USER,
           parts: [{ text: prompt }],

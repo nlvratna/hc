@@ -36,12 +36,11 @@ export async function verfiyJwt(
   next: NextFunction,
 ) {
   try {
-    const authHeaders = req.headers.authorization || req.headers.Authorization
-    //@ts-ignore
+    const authHeaders =
+      req.headers.authorization || (req.headers.Authorization as string)
     if (!authHeaders || !authHeaders?.startsWith("Bearer ")) {
       res.status(401).json({ payload: "Authorization failed" })
     }
-    //@ts-ignore
     const token = authHeaders.split(" ")[1]
     const payload = jwt.verify(
       token,
