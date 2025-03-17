@@ -1,7 +1,7 @@
 import * as jwt from "jsonwebtoken"
 import { Router, type Request } from "express"
 import { z } from "zod"
-import { prisma } from "../config"
+import { prisma } from "../../prisma/index.ts"
 import { generateRefreshToken, generateAccessToken } from "./jwt"
 
 const authRoute = Router()

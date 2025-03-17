@@ -1,7 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai"
 import { Router } from "express"
-import { prisma } from "../config"
-
+import { prisma } from "../../prisma/index.ts"
 const botRouter = Router()
 const GEMINI_API_KEY = Bun.env.GEMINI_API_KEY!
 
