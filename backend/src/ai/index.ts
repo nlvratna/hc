@@ -32,7 +32,6 @@ const content: Content[] = []
 botRouter.post("/remedies", async (req, res) => {
   const id = req.user?.id
   const symptoms = req.body.symptoms
-  console.log(symptoms)
 
   try {
     const healthRecord = await prisma.healthRecord.findFirst({
@@ -43,11 +42,9 @@ botRouter.post("/remedies", async (req, res) => {
         symptoms: true,
       },
     })
-    console.log(healthRecord)
     let result
-    if (healthRecord) {
-      // seperate fucntion?
-      if (content.length === 0) {
+    if (content.length === 0) {
+      if (healthRecord) {
         const prompt = `  My health Record ${healthRecord} and my  symptoms  are  ${symptoms}`
         const newContent: Content = {
           role: ROLE.USER,
@@ -55,48 +52,31 @@ botRouter.post("/remedies", async (req, res) => {
         }
         content.push(newContent)
       } else {
-        content.push({ role: ROLE.USER, parts: [{ text: symptoms }] })
-      }
-      result = await model.generateContent({
-        contents: content,
-        generationConfig: {
-          maxOutputTokens: 1500,
-          temperature: 0.1,
-        },
-      })
-      content.push({
-        role: ROLE.MODEL,
-        parts: [{ text: result.response.text() }],
-      })
-      console.log(result.response.text())
-    } else {
-      console.log("code was here")
-      if (content.length === 0) {
         const prompt = `My symptoms are ${symptoms} and sorry I don't have any healthRecord`
         const newContent: Content = {
           role: ROLE.USER,
           parts: [{ text: prompt }],
         }
         content.push(newContent)
-        console.log(content[0])
-      } else {
-        content.push({ role: ROLE.USER, parts: [{ text: symptoms }] })
       }
-
-      result = await model.generateContent({
-        contents: content,
-        generationConfig: {
-          maxOutputTokens: 1500,
-          temperature: 0.1,
-        },
-      })
-      console.log(result.response.text())
+    } else {
+      content.push({ role: ROLE.USER, parts: [{ text: symptoms }] })
     }
+
+    result = await model.generateContent({
+      contents: content,
+      generationConfig: {
+        maxOutputTokens: 1500,
+        temperature: 0.1,
+      },
+    })
+    const response = result.response.text()
     content.push({
       role: ROLE.MODEL,
-      parts: [{ text: result.response.text() }],
+      parts: [{ text: response }],
     })
-    res.json({ payload: result.response.text() })
+
+    res.json({ response })
   } catch (err) {
     console.log(err)
     res.json({ err })
