@@ -94,7 +94,7 @@ healthRecordRoute.patch("/change-medical-data/:id", async (req, res) => {
   try {
     const userId = req.user?.id
     const id = req.params.id
-    if (!id || userId) {
+    if (!id || !userId) {
       res.status(400).json({ err: "user Id is not found" })
     }
     const data = req.body
