@@ -73,6 +73,7 @@ authRoute.post("/signup", async (req, res) => {
 })
 
 authRoute.post("/login", async (req, res) => {
+  console.log("someone hit this route")
   try {
     const parsed = LoginSchema.safeParse(req.body)
 
