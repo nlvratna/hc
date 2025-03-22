@@ -15,7 +15,7 @@ export default function Header() {
           <Show when={location.pathname === "/"} fallback={<div>Profile</div>}>
             <A
               href="/login"
-              class="text-xl font-medium  hover:underline decoration-green-500"
+              class="text-xl font-medium border-b-0 hover:border-b-2 border-green-500 transition-all delay-100 ease-in-out hover:text-green-500/85 pb-0.5"
             >
               Login
             </A>

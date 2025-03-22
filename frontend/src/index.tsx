@@ -20,7 +20,7 @@ const Layout: ParentComponent = (props) => {
     <>
       <div class=" relative flex flex-col max-w-[1400] sm:px-4 lg:px-6">
         <Header />
-        {props.children}
+        <main>{props.children}</main>
       </div>
     </>
   );
