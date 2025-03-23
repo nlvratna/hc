@@ -7,6 +7,7 @@ import Header from "./components/Header";
 import { Route, Router } from "@solidjs/router";
 import { ParentComponent } from "solid-js";
 import Login from "./Login";
+import SignUp from "./SignUp";
 
 const root = document.getElementById("root");
 
@@ -30,6 +31,7 @@ render(
     <Router root={Layout}>
       <Route path="/" component={App} />
       <Route path="/login" component={Login} />
+      <Route path="/signup" component={SignUp} />
     </Router>
   ),
   root!,
