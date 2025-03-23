@@ -1,6 +1,7 @@
 import { createSignal, Show } from "solid-js";
 import { A, useNavigate } from "@solidjs/router";
 
+// create context for user
 export default function Login() {
   interface Props {
     email: string;
@@ -14,7 +15,6 @@ export default function Login() {
   const [submitting, setSubmitting] = createSignal<boolean>(false);
   const [err, setErr] = createSignal("");
   const navigate = useNavigate();
-
   async function handleLogin() {
     try {
       const response = await fetch("http://localhost:4840/auth/login", {
@@ -29,6 +29,7 @@ export default function Login() {
         setErr(data.payload);
         return;
       }
+      console.log(data);
 
       localStorage.setItem("token", data.accessToken);
       navigate("/");

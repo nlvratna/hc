@@ -68,10 +68,11 @@ authRoute.post("/signup", async (req, res) => {
       .json({ accessToken })
   } catch (err) {
     console.log(err)
-    res.status(500).json({ err })
+    res.status(500).json({ payload: err })
   }
 })
 
+//send the user details
 authRoute.post("/login", async (req, res) => {
   console.log("someone hit this route")
   try {
@@ -93,7 +94,8 @@ authRoute.post("/login", async (req, res) => {
     }
     const accessToken = generateAccessToken(user)
     const refreshToken = generateRefreshToken(user.email)
-    await prisma.users.update({
+    // include medical data exclude refresh token password
+    const loggedUser = await prisma.users.update({
       where: { id: user.id },
       data: { refreshToken: refreshToken },
     })
