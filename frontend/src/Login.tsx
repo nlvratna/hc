@@ -1,4 +1,5 @@
 //AI sucks
+// add authContext file
 import { createSignal, Show } from "solid-js";
 import { A, useNavigate } from "@solidjs/router";
 import { createStore } from "solid-js/store";
