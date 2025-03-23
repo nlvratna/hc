@@ -56,7 +56,6 @@ authRoute.post("/signup", async (req, res) => {
         id: true,
       },
     })
-    console.log("code was here")
     const accessToken = generateAccessToken(user)
     res
       .cookie("refreshToken", refreshToken, {
@@ -98,7 +97,22 @@ authRoute.post("/login", async (req, res) => {
     const loggedUser = await prisma.users.update({
       where: { id: user.id },
       data: { refreshToken: refreshToken },
+      select: {
+        email: true,
+        name: true,
+        id: true,
+        healthRecord: {
+          select: {
+            age: true,
+            id: true,
+            gender: true,
+            familyHistory: true,
+            symptoms: true,
+          },
+        },
+      },
     })
+    console.log(loggedUser)
     res
       .cookie("refreshToken", refreshToken, {
         httpOnly: true,
@@ -106,7 +120,7 @@ authRoute.post("/login", async (req, res) => {
         secure: true,
       })
       .status(200)
-      .json({ accessToken })
+      .json({ user: loggedUser, accessToken })
   } catch (err) {
     console.log(err)
     res.status(500).send(err)
@@ -144,4 +158,5 @@ async function emailExists(email: string) {
   const user = await prisma.users.findUnique({ where: { email } })
   return user
 }
+//TODO: add logout endpoint
 export default authRoute
