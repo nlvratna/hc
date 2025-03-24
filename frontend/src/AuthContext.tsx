@@ -10,6 +10,7 @@ interface AuthContextType {
   user: any;
   login: (userData: any) => void;
   logout: () => void;
+  token: any;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -17,10 +18,13 @@ const AuthContext = createContext<AuthContextType>({
   user: "",
   login: () => {},
   logout: () => {},
+  token: "",
 });
 
 const AuthProvider: ParentComponent = (props) => {
-  const [_token, setToken] = createSignal(localStorage.getItem("token"));
+  // setToken is used to remove the token
+  // reactivity is needed here
+  const token = localStorage.getItem("token");
   const [user, setUser] = createSignal(null);
   const [userLog, setUserLog] = createSignal(false);
 
@@ -32,13 +36,12 @@ const AuthProvider: ParentComponent = (props) => {
 
   const logout = () => {
     localStorage.removeItem("token");
-    setToken(null);
     setUser(null);
     setUserLog(false);
   };
 
   return (
-    <AuthContext.Provider value={{ userLog, user, login, logout }}>
+    <AuthContext.Provider value={{ token, userLog, user, login, logout }}>
       {props.children}
     </AuthContext.Provider>
   );

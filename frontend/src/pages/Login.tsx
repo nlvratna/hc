@@ -1,11 +1,12 @@
 //AI sucks
-// add authContext file
 import { createSignal, Show } from "solid-js";
 import { A, useNavigate } from "@solidjs/router";
 import { createStore } from "solid-js/store";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "../AuthContext";
+import { Card } from "../components/Card";
+import { Input } from "../components/Input";
+import { apiRequest } from "../utils";
 
-// create context for user
 export default function Login() {
   const { login } = useAuth();
   const [clicked, setClick] = createSignal<boolean>(false);
@@ -21,7 +22,7 @@ export default function Login() {
     setState("submitting", true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      // await new Promise((resolve) => setTimeout(resolve, 5000));
 
       const response = await fetch("http://localhost:4840/auth/login", {
         method: "POST",
@@ -35,8 +36,6 @@ export default function Login() {
         setState("err", data.payload);
         return;
       }
-      console.log(data);
-      console.log(data.user);
       login(data.user);
       localStorage.setItem("token", data.accessToken);
       navigate("/");
@@ -49,37 +48,27 @@ export default function Login() {
 
   return (
     <div class="min-h-screen flex items-center justify-center ">
-      <div class="w-full max-w-md p-8 space-y-6 bg-white shadow-lg rounded-xl mb-7">
+      <Card>
         <h2 class="text-3xl font-semibold text-center text-green-500">Login</h2>
         <Show when={state.err}>
           <p class="text-red-500 bg-red-100 p-3 rounded-lg">{state.err}</p>
         </Show>
         <form class="space-y-4" onSubmit={handleSubmit}>
-          <div>
-            <label class="block text-gray-700 text-lg mb-1" for="email">
-              Email
-            </label>
-            <input
-              class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 "
-              type="email"
-              id="email"
-              placeholder="example@gmail.com"
-              value={state.details.email}
-              onInput={(e) =>
-                setState("details", { ...state.details, email: e.target.value })
-              }
-            />
-          </div>
+          <Input
+            type="email"
+            label="Email"
+            placeholder="example@gmail.com"
+            value={state.details.email}
+            onInput={(e) =>
+              setState("details", { ...state.details, email: e.target.value })
+            }
+          />
 
           <div>
-            <label class="block text-gray-700 text-lg mb-1" for="password">
-              Password
-            </label>
-            <input
-              class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+            <Input
               type={clicked() ? "text" : "password"}
-              id="password"
-              value={state.details.password}
+              label="password"
+              value={state.details.email}
               onInput={(e) =>
                 setState("details", {
                   ...state.details,
@@ -87,14 +76,12 @@ export default function Login() {
                 })
               }
             />
-            <div>
-              <input
-                type="checkbox"
-                class="mr-1"
-                onClick={() => setClick((click) => !click)}
-              />
-              Show password
-            </div>
+            <input
+              type="checkbox"
+              class="mr-1"
+              onClick={() => setClick((click) => !click)}
+            />
+            Show password
           </div>
 
           <button
@@ -117,7 +104,7 @@ export default function Login() {
             </span>
           </A>
         </p>
-      </div>
+      </Card>
     </div>
   );
 }

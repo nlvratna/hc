@@ -1,8 +1,10 @@
 import { useNavigate } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
-import { HOME_URL } from "./Config";
+import { HOME_URL } from "../Config";
+import { Card } from "../components/Card";
+import { Input } from "../components/Input";
+import { useAuth } from "../AuthContext";
 
-// create context for the user
 // add zod validation
 export default function SignUp() {
   interface Props {
@@ -10,12 +12,13 @@ export default function SignUp() {
     email: string;
     password: string;
   }
-
+  const { login } = useAuth();
   const [data, setData] = createSignal<Props>({
     name: "",
     email: "",
     password: "",
   });
+  const [clicked, setClick] = createSignal<boolean>(false);
   const [loading, setLoading] = createSignal<boolean>(false);
   const [err, setErr] = createSignal<string>("");
   const navige = useNavigate();
@@ -32,9 +35,8 @@ export default function SignUp() {
         setErr(details.payload || "error");
       }
       localStorage.setItem("token", details.accessToken);
-      console.log(details);
+      login(details.user);
       navige("/"); // should be medical record input
-      // return user - context
     } catch (err: any) {
       setErr(err);
     } finally {
@@ -50,7 +52,7 @@ export default function SignUp() {
   return (
     <>
       <div class="min-h-screen flex justify-center items-center">
-        <div class="shadow-lg rounded-xl space-y-6 w-full max-w-md mb-7 p-8 ">
+        <Card>
           <h2 class="text-3xl font-semibold text-center text-green-500/75">
             Register
           </h2>
@@ -58,41 +60,34 @@ export default function SignUp() {
             <p class="bg-red-100 text-red-500 rounded-lg p-3 "> {err()}</p>
           </Show>
           <form class="space-y-4" onSubmit={hadleSubmission}>
+            <Input
+              type="name"
+              label="Name"
+              value={data().name}
+              onInput={(e) => setData({ ...data(), name: e.target.value })}
+            />
+            <Input
+              type="email"
+              label="Email"
+              placeholder="example@gmail.com"
+              value={data().email}
+              onInput={(e) => setData({ ...data(), email: e.target.value })}
+            />
             <div>
-              <label for="name" class="block text-lg text-gray-700 mb-1">
-                Name
-              </label>
-              <input
-                type="text"
-                class="block w-full border border-gray-300 rounded-lg p-3"
-                placeholder="Enter your name"
-                onInput={(e) => setData({ ...data(), name: e.target.value })}
-              />
-            </div>
-            <div>
-              <label for="email" class="block text-lg text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                class="block w-full border border-gray-300 rounded-lg p-3"
-                placeholder="Enter your email"
-                onInput={(e) => setData({ ...data(), email: e.target.value })}
-              />
-            </div>
-            <div>
-              <label for="password" class="block text-lg text-gray-700 mb-1">
-                password
-              </label>
-              <input
-                type="password"
-                class="block w-full border border-gray-300 rounded-lg p-3"
-                placeholder="Enter your password"
+              <Input
+                type={clicked() ? "text" : "password"}
+                label="password"
+                value={data().password}
                 onInput={(e) =>
                   setData({ ...data(), password: e.target.value })
                 }
               />
-              <p class="mt-1.5">*Passowrd must be atleast 8 characters </p>
+              <input
+                type="checkbox"
+                class="mr-1"
+                onClick={() => setClick((click) => !click)}
+              />
+              Show password
             </div>
 
             <button
@@ -104,10 +99,10 @@ export default function SignUp() {
               }`}
               disabled={loading()}
             >
-              {loading() ? "Registering.." : "Signup"}
+              {loading() ? "Loading..." : "Login"}
             </button>
           </form>
-        </div>
+        </Card>
       </div>
     </>
   );
