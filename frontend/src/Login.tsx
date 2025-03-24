@@ -3,9 +3,11 @@
 import { createSignal, Show } from "solid-js";
 import { A, useNavigate } from "@solidjs/router";
 import { createStore } from "solid-js/store";
+import { useAuth } from "./AuthContext";
 
 // create context for user
 export default function Login() {
+  const { login } = useAuth();
   const [clicked, setClick] = createSignal<boolean>(false);
   const [state, setState] = createStore({
     details: { email: "", password: "" },
@@ -35,7 +37,7 @@ export default function Login() {
       }
       console.log(data);
       console.log(data.user);
-
+      login(data.user);
       localStorage.setItem("token", data.accessToken);
       navigate("/");
     } catch (err: any) {
@@ -74,7 +76,7 @@ export default function Login() {
               Password
             </label>
             <input
-              class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none "
+              class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
               type={clicked() ? "text" : "password"}
               id="password"
               value={state.details.password}

@@ -8,6 +8,8 @@ import { Route, Router } from "@solidjs/router";
 import { ParentComponent } from "solid-js";
 import Login from "./Login";
 import SignUp from "./SignUp";
+import { AuthProvider } from "./AuthContext";
+import NotFound from "./NotFound";
 
 const root = document.getElementById("root");
 
@@ -28,11 +30,15 @@ const Layout: ParentComponent = (props) => {
 };
 render(
   () => (
-    <Router root={Layout}>
-      <Route path="/" component={App} />
-      <Route path="/login" component={Login} />
-      <Route path="/signup" component={SignUp} />
-    </Router>
+    // should only be <App />
+    <AuthProvider>
+      <Router root={Layout}>
+        <Route path="/" component={App} />
+        <Route path="/login" component={Login} />
+        <Route path="/signup" component={SignUp} />
+        <Route path="*404" component={NotFound} />
+      </Router>
+    </AuthProvider>
   ),
   root!,
 );
