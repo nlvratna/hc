@@ -5,7 +5,8 @@ import { Prisma } from "@prisma/client"
 const healthRecordRoute = Router()
 
 //basic crud
-healthRecordRoute.get("/health-record", async (req, res) => {
+healthRecordRoute.get("/record", async (req, res) => {
+  console.log("I had hit the route")
   try {
     const id = req.user?.id
     if (!id) {

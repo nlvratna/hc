@@ -101,15 +101,6 @@ authRoute.post("/login", async (req, res) => {
         email: true,
         name: true,
         id: true,
-        healthRecord: {
-          select: {
-            age: true,
-            id: true,
-            gender: true,
-            familyHistory: true,
-            symptoms: true,
-          },
-        },
       },
     })
     console.log(loggedUser)

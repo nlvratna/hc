@@ -5,8 +5,8 @@ import { createStore } from "solid-js/store";
 import { useAuth } from "../AuthContext";
 import { Card } from "../components/Card";
 import { Input } from "../components/Input";
-import { apiRequest } from "../utils";
 
+// this is slightly flawed
 export default function Login() {
   const { login } = useAuth();
   const [clicked, setClick] = createSignal<boolean>(false);
