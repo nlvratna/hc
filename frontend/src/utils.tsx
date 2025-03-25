@@ -11,7 +11,8 @@ export const apiRequest = async (url: string, option = {}) => {
   const decoded = jwtDecode(token);
   const exp = new Date(decoded.exp! * 1000);
   const now = new Date();
-  const difference = -now.getTime() + exp.getTime();
+  //minor major issue
+  const difference = Math.floor((-now.getTime() + exp.getTime()) / (1000 * 60));
   if (difference < 3) {
     const response = await fetch(`${HOME_URL}/auth/access-token`, {
       headers: {
