@@ -33,7 +33,7 @@ authRoute.post("/signup", async (req, res) => {
     const { userName, email, password } = parsed.data
     const existingUser = await emailExists(email)
     if (existingUser != null) {
-      res.status(403).json({ payload: `${email} already exists` })
+      res.status(403).json({ err: `${email} already exists` })
       console.log(existingUser)
       return
     }
@@ -42,13 +42,13 @@ authRoute.post("/signup", async (req, res) => {
       cost: 4,
     })
     const refreshToken = generateRefreshToken(email)
-
+    const hashRefresh = await Bun.password.hash(refreshToken)
     const user = await prisma.users.create({
       data: {
         email,
         name: userName,
         password: hashedPass,
-        refreshToken: refreshToken,
+        refreshToken: hashRefresh,
       },
       select: {
         name: true,
@@ -59,6 +59,7 @@ authRoute.post("/signup", async (req, res) => {
     const accessToken = generateAccessToken(user)
     res
       .cookie("refreshToken", refreshToken, {
+        maxAge: 30 * 24 * 60 * 60,
         httpOnly: true,
         sameSite: true,
         secure: true,
@@ -67,7 +68,7 @@ authRoute.post("/signup", async (req, res) => {
       .json({ accessToken })
   } catch (err) {
     console.log(err)
-    res.status(500).json({ payload: err })
+    res.status(500).json({ err: err })
   }
 })
 
@@ -84,19 +85,20 @@ authRoute.post("/login", async (req, res) => {
     const { email, password } = parsed.data
     const user = await emailExists(email)
     if (!user) {
-      res.status(403).json({ payload: "Invalid email" })
+      res.status(403).json({ err: "Invalid email" })
       return
     }
     const matched = await Bun.password.verify(password, user.password)
     if (!matched) {
-      res.status(403).json({ payload: "Invalid password" })
+      res.status(403).json({ err: "Invalid password" })
     }
     const accessToken = generateAccessToken(user)
     const refreshToken = generateRefreshToken(user.email)
+    const hashRefresh = await Bun.password.hash(refreshToken)
     // include medical data exclude refresh token password
     const loggedUser = await prisma.users.update({
       where: { id: user.id },
-      data: { refreshToken: refreshToken },
+      data: { refreshToken: hashRefresh },
       select: {
         email: true,
         name: true,
@@ -106,6 +108,7 @@ authRoute.post("/login", async (req, res) => {
     console.log(loggedUser)
     res
       .cookie("refreshToken", refreshToken, {
+        maxAge: 30 * 24 * 60 * 60,
         httpOnly: true,
         sameSite: true,
         secure: true,
@@ -123,21 +126,32 @@ authRoute.get("/access-token", async (req: Request, res) => {
     const cookies = req.cookies
     console.log(cookies)
     if (!cookies?.refreshToken) {
-      res
-        .status(403)
-        .json({ message: "Refresh Token not available in cookies" })
+      res.status(403).json({ err: "Refresh Token not available in cookies" })
       return
     }
     const user = await prisma.users.findFirst({
-      where: { email: req.user?.email },
+      where: { id: req.user?.id },
     })
-    if (!user || user?.refreshToken != cookies.refreshToken) {
-      res.status(403).json({ message: "Invalid refresh Token" })
-      return
+    if (!user) {
+      res.status(403).json({ err: "user is not found" })
     }
-
+    if (!user?.refreshToken) {
+      res
+        .json(302)
+        .json({ err: "User doesn't have refresh token he should re-login" })
+    }
+    const isMatch = await Bun.password.verify(
+      cookies.refreshToken,
+      user?.refreshToken as string,
+    )
+    if (!isMatch) {
+      res
+        .status(403)
+        .json({ err: "refresh token is accessed and cannot be used" })
+    }
     jwt.verify(cookies.refreshToken, Bun.env.REFRESH_TOKEN_SECRET!)
-    const accessToken = generateAccessToken(user)
+
+    const accessToken = generateAccessToken(user!)
     res.status(200).json({ accessToken })
   } catch (err) {
     console.log(err)

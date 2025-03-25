@@ -1,4 +1,3 @@
-import { useNavigate } from "@solidjs/router";
 import { createSignal, Show, Suspense } from "solid-js";
 import { HOME_URL } from "../Config";
 import { Card } from "../components/Card";
@@ -23,7 +22,6 @@ export default function SignUp() {
   const [loading, setLoading] = createSignal<boolean>(false);
   const [err, setErr] = createSignal<string>("");
   const [signUpComplete, setSignUp] = createSignal(false);
-  const navigate = useNavigate();
 
   const register = async () => {
     try {
@@ -34,7 +32,7 @@ export default function SignUp() {
       });
       const details = await response.json();
       if (!response.ok) {
-        setErr(details.payload || "error");
+        setErr(details.err || "error");
       }
       localStorage.setItem("token", details.accessToken);
       login(details.user);

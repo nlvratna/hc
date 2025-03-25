@@ -1,9 +1,11 @@
 import {
   createContext,
   createSignal,
+  onMount,
   ParentComponent,
   useContext,
 } from "solid-js";
+import { tokenExpire } from "./utils";
 
 interface AuthContextType {
   userLog: () => boolean;
@@ -34,7 +36,15 @@ const AuthProvider: ParentComponent = (props) => {
     setUser(null);
     setUserLog(false);
   };
-
+  const checkUserLog = async () => {
+    try {
+      await tokenExpire();
+      setUserLog(true);
+    } catch (err: any) {
+      setUserLog(false);
+    }
+  };
+  onMount(() => checkUserLog());
   return (
     <AuthContext.Provider value={{ userLog, user, login, logout }}>
       {props.children}

@@ -25,7 +25,7 @@ export function generateRefreshToken(email: string) {
       userInfo: { email: email },
     },
     Bun.env.REFRESH_TOKEN_SECRET!,
-    { expiresIn: "1d" },
+    { expiresIn: "30d" },
   )
   return accessToken
 }
@@ -39,7 +39,7 @@ export async function verfiyJwt(
     const authHeaders =
       req.headers.authorization || (req.headers.Authorization as string)
     if (!authHeaders || !authHeaders?.startsWith("Bearer ")) {
-      res.status(401).json({ payload: "Authorization failed" })
+      res.status(401).json({ err: "Authorization failed" })
     }
     const token = authHeaders.split(" ")[1]
     const payload = jwt.verify(

@@ -32,8 +32,8 @@ export default function Login() {
       const data = await response.json();
 
       if (!response.ok) {
-        console.log(data.payload);
-        setState("err", data.payload);
+        console.log(data.err);
+        setState("err", data.err);
         return;
       }
       login(data.user);
