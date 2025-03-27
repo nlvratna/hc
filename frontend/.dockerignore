@@ -1,0 +1,11 @@
+node_modules/
+.gitignore
+.git
+bun.lockb
+Dockerfile
+.env
+
+
+dist
+.vit
+.dockerignore
