@@ -44,10 +44,11 @@ healthRecordRoute.post(
       if (!id || !req.body) {
         res.status(400).json({ err: "missing required data" })
       }
-
+      const parsedAge = new Date(age)
+      parsedAge.setHours(0, 0, 0, 0)
       const healthRecord = await prisma.healthRecord.create({
         data: {
-          age,
+          age: parsedAge,
           gender,
           familyHistory,
           symptoms: { create: Medication },

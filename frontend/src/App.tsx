@@ -1,4 +1,4 @@
-import { createEffect, onCleanup, type Component } from "solid-js";
+import { createEffect, onCleanup, Show, type Component } from "solid-js";
 import Header from "./components/Header";
 import { Route, Router } from "@solidjs/router";
 import { ParentComponent } from "solid-js";

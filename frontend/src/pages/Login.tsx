@@ -68,7 +68,7 @@ export default function Login() {
             <Input
               type={clicked() ? "text" : "password"}
               label="password"
-              value={state.details.email}
+              value={state.details.password}
               onInput={(e) =>
                 setState("details", {
                   ...state.details,

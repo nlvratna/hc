@@ -23,7 +23,7 @@ model Users {
 
 model healthRecord {
     id            Int          @id @default(autoincrement())
-    age           DateTime     @db.Date
+    age           DateTime
     gender        String
     familyHistory String[]
     user          Users        @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -37,7 +37,7 @@ model healthRecord {
 model medication {
     id             Int          @id @default(autoincrement())
     name           String
-    reportedAt     DateTime     @db.Date
+    reportedAt     DateTime
     prescription   String
     healthRecord   healthRecord @relation(fields: [healthRecordId], references: [id])
     healthRecordId Int

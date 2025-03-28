@@ -37,6 +37,8 @@ const AuthProvider: ParentComponent = (props) => {
     setUserLog(false);
   };
   const checkUserLog = async () => {
+    // may be not useful
+    // not useful
     try {
       await tokenExpire();
       setUserLog(true);
