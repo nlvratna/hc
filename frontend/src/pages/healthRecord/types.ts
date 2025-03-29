@@ -4,12 +4,13 @@ export enum Gender {
 }
 export const date: Date = new Date();
 export interface healthRecord {
-  details: {
-    age: typeof date;
-    gender: Gender;
-    familyHistory: string[];
-    medication: medication[];
-  };
+  age: typeof date;
+  gender: Gender;
+  familyHistory: string[];
+  medication: medication[];
+}
+export interface healthRecordInput {
+  details: healthRecord;
   submitted: boolean;
   err: any;
 }

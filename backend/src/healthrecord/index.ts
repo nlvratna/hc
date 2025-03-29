@@ -13,11 +13,11 @@ healthRecordRoute.get("/record", async (req, res) => {
       res.status(400).json({ error: "User Id is not found" })
       return
     }
-    const heatlhRecord = await prisma.healthRecord.findUnique({
+    const healthRecord = await prisma.healthRecord.findUnique({
       where: { userId: id },
     })
 
-    res.json({ heatlhRecord })
+    res.json({ healthRecord })
   } catch (err) {
     res.status(500).json({ err })
   }

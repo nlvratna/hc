@@ -1,13 +1,13 @@
-import { For, Show } from "solid-js";
+import { Index, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { apiRequest } from "../../utils";
 import { HOME_URL } from "../../Config";
-import { date, healthRecord, medication, Gender } from "./types";
+import { date, healthRecordInput, medication, Gender } from "./types";
 import DatePicker from "@rnwonder/solid-date-picker";
 import "@rnwonder/solid-date-picker/dist/style.css";
 //create page to show healthRecord and test this page
 export default function SubmitHealthRecord() {
-  const [data, setData] = createStore<healthRecord>({
+  const [data, setData] = createStore<healthRecordInput>({
     details: {
       age: date,
       gender: Gender.Male,
@@ -209,30 +209,30 @@ export default function SubmitHealthRecord() {
               </div>
             </Show>
 
-            <For each={data.details.medication}>
+            <Index each={data.details.medication}>
               {(data, index) => (
                 <div class="mt-4 space-y-2">
                   <div class="bg-green-50 p-2 rounded flex justify-between items-center">
                     <div>
                       <span class="font-semibold">{data.name}</span>
                       <span class="text-gray-500 ml-2">
-                        {data.prescription}
+                        {data().prescription}
                       </span>
                       <span class="text-gray-400 ml-2 text-sm">
-                        Started: {data.reportedAt.toDateString()}
+                        Started: {data().reportedAt.toDateString()}
                       </span>
                     </div>
                     <button
                       type="button"
                       class="text-red-500 hover:text-red-700"
-                      onClick={() => deleteFunction(index())}
+                      onClick={() => deleteFunction(index)}
                     >
                       ✕
                     </button>
                   </div>
                 </div>
               )}
-            </For>
+            </Index>
           </div>
 
           {/* Submit Button */}
