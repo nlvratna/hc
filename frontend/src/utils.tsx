@@ -6,8 +6,12 @@ export const apiRequest = async (url: string, option = {}) => {
   try {
     await tokenExpire();
     const token = localStorage.getItem("token");
+    console.log({ url: url, option });
     const response = await fetch(url, {
-      headers: { authorization: `Bearer ${token}` },
+      headers: {
+        authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
       ...option,
     });
     const data = await response.json();
@@ -15,8 +19,7 @@ export const apiRequest = async (url: string, option = {}) => {
     if (!response.ok) {
       return { data: null, err: data.err };
     }
-    const jsonData = await data.json();
-    return { data: jsonData.err, err: null };
+    return { data: data, err: null };
   } catch (err: any) {
     return { data: null, err: err };
   }

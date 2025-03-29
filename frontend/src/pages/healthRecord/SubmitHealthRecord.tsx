@@ -2,32 +2,10 @@ import { For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { apiRequest } from "../../utils";
 import { HOME_URL } from "../../Config";
-
-enum Gender {
-  Male = "male",
-  Female = "female",
-}
-
-const date = new Date();
+import { date, healthRecord, medication, Gender } from "./types";
 
 //create page to show healthRecord and test this page
 export default function SubmitHealthRecord() {
-  interface healthRecord {
-    details: {
-      age: typeof date;
-      gender: Gender;
-      familyHistory: string[];
-      medication: medication[];
-    };
-    submitted: boolean;
-    err: any;
-  }
-
-  interface medication {
-    name: string;
-    prescription?: string;
-    reportedAt: typeof date;
-  }
   const [data, setData] = createStore<healthRecord>({
     details: {
       age: date,
@@ -68,16 +46,20 @@ export default function SubmitHealthRecord() {
     );
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: SubmitEvent) => {
+    e.preventDefault();
+    setData("submitted", true);
     try {
+      await new Promise((resolve) => setTimeout(resolve, 4000));
       const { _, err } = await apiRequest(
-        `${HOME_URL}/health-record/add-health-record`,
+        `http://localhost:4840/health-record/add-health-record`,
         {
           method: "POST",
           body: JSON.stringify(data.details),
         },
       );
       if (err !== null) {
+        console.error(err);
         setData("err", err);
       }
       setData("submitted", true);
@@ -98,10 +80,10 @@ export default function SubmitHealthRecord() {
           <p class="text-gray-500">Please provide your medical information</p>
         </div>
 
-        <form class="space-y-6" method="post" onSubmit={handleSubmit}>
+        <form class="space-y-6" onSubmit={handleSubmit}>
           {/* Error form  */}
           <Show when={data.err}>
-            <div class="bg-red-500 text-red-700 rounded-lg p-3">
+            <div class="bg-red-100 text-red-700 rounded-lg p-3">
               {typeof data.err === "object"
                 ? "something went wrong please try again"
                 : data.err}
@@ -222,14 +204,13 @@ export default function SubmitHealthRecord() {
               Add Medication
             </button>
             <Show when={meidcalData.err}>
-              <div class="bg-red-500 text-red-700 rounded-lg p-3">
+              <div class="bg-red-100 text-red-700 rounded-lg p-3">
                 {typeof meidcalData.err === "object"
                   ? "something went wrong please try again"
                   : data.err}
               </div>
             </Show>
 
-            {/* Placeholder for added medications */}
             <For each={data.details.medication}>
               {(data, index) => (
                 <div class="mt-4 space-y-2">
@@ -251,21 +232,6 @@ export default function SubmitHealthRecord() {
                       ✕
                     </button>
                   </div>
-                  <div class="bg-green-50 p-2 rounded flex justify-between items-center">
-                    <div>
-                      <span class="font-semibold">Metformin</span>
-                      <span class="text-gray-500 ml-2">500mg</span>
-                      <span class="text-gray-400 ml-2 text-sm">
-                        Started: 2022-06-20
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      class="text-red-500 hover:text-red-700"
-                    >
-                      ✕
-                    </button>
-                  </div>
                 </div>
               )}
             </For>
@@ -274,7 +240,14 @@ export default function SubmitHealthRecord() {
           {/* Submit Button */}
           <button
             type="submit"
-            class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out transform hover:-translate-y-1 shadow-lg"
+            class={` w-full  py-3 rounded-lg text-white
+                    ${
+                      !data.submitted
+                        ? "bg-blue-500 hover:bg-blue-700 cursor-pointer transition duration-300 ease-in-out transform hover:-translate-y-1"
+                        : "bg-gray-600 cursor-not-allowed"
+                    }
+                    `}
+            disabled={data.submitted}
           >
             Save Medical History
           </button>

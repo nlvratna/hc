@@ -7,6 +7,7 @@ import SignUp from "./pages/SignUp";
 import { AuthProvider } from "./AuthContext";
 import NotFound from "./NotFound";
 import LandingPage from "./pages/LandingPage";
+import HealthRecord from "./pages/healthRecord/HealthRecord";
 
 const Layout: ParentComponent = (props) => {
   return (
@@ -26,6 +27,7 @@ const App: Component = () => {
         <Route path="/login" component={Login} />
         <Route path="/signup" component={SignUp} />
         <Route path="*404" component={NotFound} />
+        <Route path="/health-record" component={HealthRecord} />
       </Router>
     </AuthProvider>
   );
