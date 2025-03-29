@@ -3,7 +3,8 @@ import { createStore } from "solid-js/store";
 import { apiRequest } from "../../utils";
 import { HOME_URL } from "../../Config";
 import { date, healthRecord, medication, Gender } from "./types";
-
+import DatePicker from "@rnwonder/solid-date-picker";
+import "@rnwonder/solid-date-picker/dist/style.css";
 //create page to show healthRecord and test this page
 export default function SubmitHealthRecord() {
   const [data, setData] = createStore<healthRecord>({
@@ -51,7 +52,7 @@ export default function SubmitHealthRecord() {
     setData("submitted", true);
     try {
       await new Promise((resolve) => setTimeout(resolve, 4000));
-      const { _, err } = await apiRequest(
+      const { _data, err } = await apiRequest(
         `http://localhost:4840/health-record/add-health-record`,
         {
           method: "POST",
@@ -96,12 +97,9 @@ export default function SubmitHealthRecord() {
               <label class="block text-gray-700 font-semibold mb-2">
                 Date of Birth
               </label>
-              <input
-                type="date"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2  transition"
-                onInput={(e) =>
-                  setData("details", "age", new Date(e.target.value))
-                }
+              <DatePicker
+                //@ts-ignore
+                onChange={(value) => setData("details", "age", value)}
               />
             </div>
 

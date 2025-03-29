@@ -4,6 +4,7 @@
     "": {
       "name": "vite-template-solid",
       "dependencies": {
+        "@rnwonder/solid-date-picker": "^1.4.1",
         "@solidjs/router": "^0.15.3",
         "@tailwindcss/postcss": "^4.0.14",
         "jwt-decode": "^4.0.0",
@@ -116,6 +117,10 @@
     "@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.5.0", "", {}, "sha512-gv3ZRaISU3fjPAgNsriBRqGWQL6quFx04YMPW/zD8XMLsU32mhCCbfbO6KZFLjvYpCZ8zyDEgqsgf+PwPaM7GQ=="],
 
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.25", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ=="],
+
+    "@rnwonder/simple-datejs": ["@rnwonder/simple-datejs@1.0.8", "", {}, "sha512-zx4K787a1Cr9EpWC5pqftzKLe69qoE4vTvNRH8VAfBpGeM/4Jsaz/fg16NEjpwiJ/+iEYCy+1JhLtCrb/5mhDA=="],
+
+    "@rnwonder/solid-date-picker": ["@rnwonder/solid-date-picker@1.4.1", "", { "dependencies": { "@rnwonder/simple-datejs": "^1.0.8" }, "peerDependencies": { "solid-js": "^1.6.12" } }, "sha512-QdnGyNds5bd4RXoGYkVxlfP4scwuBfr1wyMU3cIYQz5paejDj65DPpAWaJ5dBulx+nbT3ciucqq2cBCCKYlZWg=="],
 
     "@rollup/rollup-android-arm-eabi": ["@rollup/rollup-android-arm-eabi@4.36.0", "", { "os": "android", "cpu": "arm" }, "sha512-jgrXjjcEwN6XpZXL0HUeOVGfjXhPyxAbbhD0BlXUB+abTOpbPiN5Wb3kOT7yb+uEtATNYF5x5gIfwutmuBA26w=="],
 

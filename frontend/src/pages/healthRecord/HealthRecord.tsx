@@ -1,4 +1,11 @@
-import { createResource, Match, Show, Switch } from "solid-js";
+import {
+  createResource,
+  createSignal,
+  Match,
+  onMount,
+  Show,
+  Switch,
+} from "solid-js";
 import { apiRequest } from "../../utils";
 import { HOME_URL } from "../../Config";
 
@@ -11,7 +18,11 @@ const getRecord = async () => {
   return data;
 };
 export default function HealthRecord() {
-  const [record] = createResource(getRecord);
+  const [t, setT] = createSignal(false);
+  const [record] = createResource(t, getRecord);
+
+  onMount(() => setT(true));
+
   return (
     <>
       <Switch>
