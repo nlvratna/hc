@@ -28,7 +28,6 @@ const AuthProvider: ParentComponent = (props) => {
   const login = (userData: any) => {
     setUser(userData);
     setUserLog(true);
-    console.log(user());
   };
 
   const logout = () => {
@@ -36,17 +35,20 @@ const AuthProvider: ParentComponent = (props) => {
     setUser(null);
     setUserLog(false);
   };
-  const checkUserLog = async () => {
-    // may be not useful
-    // not useful
-    try {
-      await tokenExpire();
-      setUserLog(true);
-    } catch (err: any) {
-      setUserLog(false);
-    }
-  };
-  onMount(() => checkUserLog());
+  // const checkUserLog = async () => {
+  //   // may be not useful
+  //   // not useful
+  //   try {
+  //     await tokenExpire();
+  //     setUserLog(true);
+  //   } catch (err: any) {
+  //     setUserLog(false);
+  //   }
+  // };
+  // onMount(() => checkUserLog());
+
+  // onCleanup(() => logout());
+
   return (
     <AuthContext.Provider value={{ userLog, user, login, logout }}>
       {props.children}

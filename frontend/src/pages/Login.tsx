@@ -69,12 +69,7 @@ export default function Login() {
               type={clicked() ? "text" : "password"}
               label="password"
               value={state.details.password}
-              onInput={(e) =>
-                setState("details", {
-                  ...state.details,
-                  password: e.target.value,
-                })
-              }
+              onInput={(e) => setState("details", "password", e.target.value)}
             />
             <input
               type="checkbox"
