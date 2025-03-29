@@ -16,7 +16,7 @@ export const apiRequest = async (url: string, option = {}) => {
       return { data: null, err: data.err };
     }
     const jsonData = await data.json();
-    return { data: jsonData, err: null };
+    return { data: jsonData.err, err: null };
   } catch (err: any) {
     return { data: null, err: err };
   }

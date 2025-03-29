@@ -1,5 +1,7 @@
-import { For } from "solid-js";
+import { For, Show } from "solid-js";
 import { createStore } from "solid-js/store";
+import { apiRequest } from "../../utils";
+import { HOME_URL } from "../../Config";
 
 enum Gender {
   Male = "male",
@@ -8,24 +10,28 @@ enum Gender {
 
 const date = new Date();
 
-//TODO : add submit fucntion to submit healthRecord
+//create page to show healthRecord and test this page
 export default function SubmitHealthRecord() {
-  // interface healthRecord {
-  //   age: Date;
-  //   gender: Gender;
-  //   familyHistory: string[];
-  //   medication: medication[];
-  // }
+  interface healthRecord {
+    details: {
+      age: typeof date;
+      gender: Gender;
+      familyHistory: string[];
+      medication: medication[];
+    };
+    submitted: boolean;
+    err: any;
+  }
 
   interface medication {
     name: string;
     prescription?: string;
     reportedAt: typeof date;
   }
-  const [data, setData] = createStore({
+  const [data, setData] = createStore<healthRecord>({
     details: {
-      age: "",
-      gender: "",
+      age: date,
+      gender: Gender.Male,
       familyHistory: [] as string[],
       medication: [] as medication[],
     },
@@ -34,8 +40,6 @@ export default function SubmitHealthRecord() {
   });
   const [meidcalData, setMedicalData] = createStore({
     details: { name: "", prescription: "", reportedAt: date },
-    add: false,
-    delete: false,
     err: "",
   });
 
@@ -64,6 +68,28 @@ export default function SubmitHealthRecord() {
     );
   };
 
+  const handleSubmit = async () => {
+    try {
+      const { _, err } = await apiRequest(
+        `${HOME_URL}/health-record/add-health-record`,
+        {
+          method: "POST",
+          body: JSON.stringify(data.details),
+        },
+      );
+      if (err !== null) {
+        setData("err", err);
+      }
+      setData("submitted", true);
+    } catch (err: any) {
+      console.error(err);
+      setData("err", err);
+    } finally {
+      setData("submitted", false);
+    }
+  };
+
+  //render HandleRecord when completed  submission create another signal
   return (
     <>
       <div class="flex flex-col justify-center items-center min-h-screen ">
@@ -72,7 +98,15 @@ export default function SubmitHealthRecord() {
           <p class="text-gray-500">Please provide your medical information</p>
         </div>
 
-        <form class="space-y-6">
+        <form class="space-y-6" method="post" onSubmit={handleSubmit}>
+          {/* Error form  */}
+          <Show when={data.err}>
+            <div class="bg-red-500 text-red-700 rounded-lg p-3">
+              {typeof data.err === "object"
+                ? "something went wrong please try again"
+                : data.err}
+            </div>
+          </Show>
           {/* Personal Details Section */}
           <div class="grid md:grid-cols-2 gap-6">
             {/* Age Input */}
@@ -83,8 +117,9 @@ export default function SubmitHealthRecord() {
               <input
                 type="date"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2  transition"
-                value={data.details.age}
-                onInput={(e) => setData("details", "age", e.target.value)}
+                onInput={(e) =>
+                  setData("details", "age", new Date(e.target.value))
+                }
               />
             </div>
 
@@ -186,6 +221,13 @@ export default function SubmitHealthRecord() {
             >
               Add Medication
             </button>
+            <Show when={meidcalData.err}>
+              <div class="bg-red-500 text-red-700 rounded-lg p-3">
+                {typeof meidcalData.err === "object"
+                  ? "something went wrong please try again"
+                  : data.err}
+              </div>
+            </Show>
 
             {/* Placeholder for added medications */}
             <For each={data.details.medication}>

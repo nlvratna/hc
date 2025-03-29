@@ -46,7 +46,7 @@ healthRecordRoute.post(
       }
       const parsedAge = new Date(age)
       parsedAge.setHours(0, 0, 0, 0)
-      const healthRecord = await prisma.healthRecord.create({
+      await prisma.healthRecord.create({
         data: {
           age: parsedAge,
           gender,
@@ -56,7 +56,7 @@ healthRecordRoute.post(
         },
       })
 
-      res.json({ healthRecord })
+      res.status(201).json({ message: "health Record created successfully" })
     } catch (err) {
       console.log(err)
       if (err instanceof Prisma.PrismaClientKnownRequestError) {

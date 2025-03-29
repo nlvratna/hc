@@ -21,6 +21,7 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
 });
 
+//use createMutable
 const AuthProvider: ParentComponent = (props) => {
   const [user, setUser] = createSignal(null);
   const [userLog, setUserLog] = createSignal(false);
