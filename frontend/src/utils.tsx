@@ -12,6 +12,7 @@ export const apiRequest = async (url: string, option = {}) => {
         authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
+      credentials: "include",
       ...option,
     });
     const data = await response.json();

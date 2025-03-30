@@ -7,7 +7,6 @@ import {
   Show,
   Suspense,
   Switch,
-  onMount,
 } from "solid-js";
 import { apiRequest } from "../../utils";
 import { HOME_URL } from "../../Config";
@@ -19,22 +18,28 @@ import {
   addMedication,
   deleteMedication,
   updateMedication,
-  initializeData,
   submitHealthRecord,
+  initializeData,
 } from "./actions";
 import { Gender } from "./types";
+import { useLocation } from "@solidjs/router";
 
 const getRecord = async () => {
   try {
+    console.log("get record is called ...");
     const { data, err } = await apiRequest(`${HOME_URL}/health-record/record`);
     if (err !== null) {
-      // If the error is 404, it means the user doesn't have a record yet
-      if (err.status === 404) {
-        return { newUser: true };
+      if (err == "No Health Record is found") {
+        initializeData(null);
+        return;
+      } else {
+        console.log("right before console log err");
+        console.error(err);
+        throw err;
       }
-      console.error(err);
-      throw err;
     }
+    console.log(data);
+    initializeData(data);
     return data;
   } catch (error) {
     console.error("Error fetching health record:", error);
@@ -61,24 +66,19 @@ const EditIcon = () => (
 );
 
 export default function HealthRecord() {
+  const location = useLocation();
   const [recordResponse] = createResource(getRecord);
   const [editing, setEditing] = createSignal(false);
   const [addingMedication, setAddingMedication] = createSignal(false);
-  const [editingMedicationIndex, setEditingMedicationIndex] = createSignal(-1);
   const [saving, setSaving] = createSignal(false);
+  const [editingMedication, setEditingMedication] = createSignal(false);
+  const [skip, setSkip] = createSignal(false);
 
-  // Initialize data when record loads
-  onMount(() => {
-    if (recordResponse()) {
-      initializeData(recordResponse());
-
-      // If it's a new user, automatically enable editing mode
-      if (recordResponse().newUser || data.isNewUser) {
-        setEditing(true);
-      }
-    }
-  });
-
+  //working and add skip button later
+  if (location.state == "signup") {
+    setEditing(true);
+    setSkip(true);
+  }
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -86,7 +86,6 @@ export default function HealthRecord() {
       if (success) {
         setEditing(false);
         setAddingMedication(false);
-        setEditingMedicationIndex(-1);
       }
     } catch (error) {
       console.error("Error saving health record:", error);
@@ -96,22 +95,13 @@ export default function HealthRecord() {
     }
   };
 
+  //only users with already exisitng data while eiditng can do that new users will have a option to skip and go the chatpage
   const handleCancel = () => {
-    // If it's a new user and they cancel, we keep them in editing mode
-    // since they need to create a record
-    if (data.isNewUser) {
-      // Just reset the form without exiting edit mode
-      initializeData({ newUser: true });
-      setAddingMedication(false);
-      setEditingMedicationIndex(-1);
-    } else {
-      // Reset to original data for existing users
-      if (recordResponse()) {
-        initializeData(recordResponse());
-      }
+    if (recordResponse()) {
+      initializeData(recordResponse());
       setEditing(false);
       setAddingMedication(false);
-      setEditingMedicationIndex(-1);
+      setEditingMedication(false);
     }
   };
 
@@ -126,35 +116,35 @@ export default function HealthRecord() {
           }
         >
           <Switch>
-            <Match
-              when={recordResponse.error && recordResponse.error.status !== 404}
-            >
+            <Match when={recordResponse.error && !data.isDataAvailable}>
               <div class="p-4 bg-red-100 text-red-700 rounded w-full">
                 Something went wrong loading your health record
               </div>
             </Match>
 
-            <Match when={recordResponse() || data.isNewUser}>
+            <Match when={recordResponse() || !data.isDataAvailable}>
               <div class="flex flex-col justify-evenly m-8">
                 {/* Header */}
                 <div class="bg-green-500 text-white p-4 flex justify-between items-center w-full">
                   <h2 class="text-xl font-bold text-center w-full">
-                    {data.isNewUser ? "Create Health Record" : "Health Record"}
+                    {!data.isDataAvailable
+                      ? "Create Health Record"
+                      : "Health Record"}
                   </h2>
                   <Show
-                    when={!editing()}
+                    when={!editing() && data.isDataAvailable}
                     fallback={
                       <div class="flex gap-2">
-                        <Show when={!data.isNewUser}>
+                        <Show when={data.isDataAvailable}>
                           <button
-                            class="bg-white text-red-500 p-2 rounded hover:bg-red-100 transition duration-200"
+                            class="cursor-pointer bg-white text-red-500 p-2 rounded hover:bg-red-100 transition duration-200"
                             onClick={handleCancel}
                           >
                             Cancel
                           </button>
                         </Show>
                         <button
-                          class="bg-white text-green-500 p-2 rounded hover:bg-green-100 transition duration-200"
+                          class=" cursor-pointer bg-white text-green-500 p-2 rounded hover:bg-green-100 transition duration-200"
                           onClick={handleSave}
                           disabled={saving()}
                         >
@@ -188,7 +178,6 @@ export default function HealthRecord() {
                         <h3 class="text-lg font-semibold text-gray-800">
                           Date of Birth
                         </h3>
-                        {}
                       </div>
                       <Show
                         when={editing()}
@@ -255,6 +244,8 @@ export default function HealthRecord() {
                               setData(
                                 "details",
                                 "gender",
+                                //@ts-ignore
+                                //for now
                                 e.target.value as Gender,
                               )
                             }
@@ -301,6 +292,7 @@ export default function HealthRecord() {
                       </Show>
                     </div>
 
+                    {/* this is an seperate api for eidting existing data */}
                     {/* Add Medication Form */}
                     <Show when={addingMedication()}>
                       <div class="border rounded-lg p-4 mb-6 bg-gray-50">
@@ -381,7 +373,6 @@ export default function HealthRecord() {
                         </div>
                       </div>
                     </Show>
-
                     <Show
                       when={data.details.medication.length > 0}
                       fallback={
@@ -413,109 +404,122 @@ export default function HealthRecord() {
                       }
                     >
                       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <For each={data.details.medication}>
-                          {(medication, index) => (
-                            <div class="border rounded-lg p-4 flex flex-col">
-                              <div class="flex justify-between items-start">
-                                <div class="font-medium text-gray-800 text-lg">
-                                  {medication.name}
+                        <Show when={data.details.medication.length > 1}>
+                          <For each={recordResponse()?.healthRecord.medication}>
+                            {(medication, index) => (
+                              <div class="border rounded-lg p-4 flex flex-col">
+                                <div class="flex justify-between items-start">
+                                  <div class="font-medium text-gray-800 text-lg">
+                                    {medication.name}
+                                  </div>
+                                  <Show when={editing()}>
+                                    <button
+                                      class="text-blue-500"
+                                      onClick={() => setEditingMedication(true)}
+                                    >
+                                      <EditIcon />
+                                    </button>
+                                  </Show>
                                 </div>
-                                <Show when={editing()}>
-                                  <button
-                                    class="text-blue-500"
-                                    onClick={() =>
-                                      setEditingMedicationIndex(index())
-                                    }
-                                  >
-                                    <EditIcon />
-                                  </button>
+                                <div class="text-md mt-2 text-gray-600">
+                                  {medication.prescription}
+                                </div>
+                                <div class="text-sm mt-auto pt-3 text-gray-500">
+                                  Reported:
+                                  {new Date(
+                                    medication.reportedAt,
+                                  ).toDateString()}
+                                </div>
+                                <Show when={editing() && editingMedication()}>
+                                  <div class="mt-3 pt-3 border-t border-gray-200">
+                                    <div class="mb-2">
+                                      <input
+                                        type="text"
+                                        value={medication.name}
+                                        class="border rounded p-2 w-full mb-2"
+                                        placeholder="Medication name"
+                                        onChange={(e) => {
+                                          const updated = {
+                                            ...medication,
+                                            name: e.target.value,
+                                          };
+                                          updateMedication(
+                                            index(),
+                                            medication.id,
+                                            updated,
+                                          );
+                                        }}
+                                      />
+                                      <textarea
+                                        class="border rounded p-2 w-full h-20 mb-2"
+                                        placeholder="Prescription details"
+                                        value={medication.prescription}
+                                        onChange={(e) => {
+                                          const updated = {
+                                            ...medication,
+                                            prescription: e.target.value,
+                                          };
+                                          updateMedication(
+                                            index(),
+                                            medication.id,
+                                            updated,
+                                          );
+                                        }}
+                                      ></textarea>
+                                      <input
+                                        type="date"
+                                        value={
+                                          new Date(medication.reportedAt)
+                                            .toISOString()
+                                            .split("T")[0]
+                                        }
+                                        class="border rounded p-2 w-full"
+                                        onChange={(e) => {
+                                          const updated = {
+                                            ...medication,
+                                            reportedAt: new Date(
+                                              e.target.value,
+                                            ),
+                                          };
+                                          updateMedication(
+                                            index(),
+                                            medication.id,
+                                            updated,
+                                          );
+                                        }}
+                                      />
+                                    </div>
+                                    <div class="flex justify-end gap-2">
+                                      <button
+                                        class="px-3 py-1 text-red-500 border border-red-500 rounded hover:bg-red-50"
+                                        onClick={() =>
+                                          deleteMedication(index())
+                                        }
+                                      >
+                                        Delete
+                                      </button>
+                                      <button
+                                        class="px-3 py-1 text-gray-500 border border-gray-500 rounded hover:bg-gray-50"
+                                        onClick={() =>
+                                          setEditingMedication(false)
+                                        }
+                                      >
+                                        Done
+                                      </button>
+                                    </div>
+                                  </div>
                                 </Show>
                               </div>
-                              <div class="text-md mt-2 text-gray-600">
-                                {medication.prescription}
-                              </div>
-                              <div class="text-sm mt-auto pt-3 text-gray-500">
-                                Reported:{" "}
-                                {new Date(medication.reportedAt).toDateString()}
-                              </div>
-                              <Show
-                                when={
-                                  editing() &&
-                                  editingMedicationIndex() === index()
-                                }
-                              >
-                                <div class="mt-3 pt-3 border-t border-gray-200">
-                                  <div class="mb-2">
-                                    <input
-                                      type="text"
-                                      value={medication.name}
-                                      class="border rounded p-2 w-full mb-2"
-                                      placeholder="Medication name"
-                                      onChange={(e) => {
-                                        const updated = {
-                                          ...medication,
-                                          name: e.target.value,
-                                        };
-                                        updateMedication(index(), updated);
-                                      }}
-                                    />
-                                    <textarea
-                                      class="border rounded p-2 w-full h-20 mb-2"
-                                      placeholder="Prescription details"
-                                      value={medication.prescription}
-                                      onChange={(e) => {
-                                        const updated = {
-                                          ...medication,
-                                          prescription: e.target.value,
-                                        };
-                                        updateMedication(index(), updated);
-                                      }}
-                                    ></textarea>
-                                    <input
-                                      type="date"
-                                      value={
-                                        new Date(medication.reportedAt)
-                                          .toISOString()
-                                          .split("T")[0]
-                                      }
-                                      class="border rounded p-2 w-full"
-                                      onChange={(e) => {
-                                        const updated = {
-                                          ...medication,
-                                          reportedAt: new Date(e.target.value),
-                                        };
-                                        updateMedication(index(), updated);
-                                      }}
-                                    />
-                                  </div>
-                                  <div class="flex justify-end gap-2">
-                                    <button
-                                      class="px-3 py-1 text-red-500 border border-red-500 rounded hover:bg-red-50"
-                                      onClick={() => deleteMedication(index())}
-                                    >
-                                      Delete
-                                    </button>
-                                    <button
-                                      class="px-3 py-1 text-gray-500 border border-gray-500 rounded hover:bg-gray-50"
-                                      onClick={() =>
-                                        setEditingMedicationIndex(-1)
-                                      }
-                                    >
-                                      Done
-                                    </button>
-                                  </div>
-                                </div>
-                              </Show>
-                            </div>
-                          )}
-                        </For>
+                            )}
+                          </For>
+                        </Show>
                       </div>
                     </Show>
                   </div>
                 </div>
 
-                {/* New User Call-to-Action */}
-                <Show when={data.isNewUser}>
+                {/* New User Call-to-Action  skip button should be here*/}
+                <Show when={!data.isDataAvailable}>
                   <div class="p-4 bg-blue-50 text-blue-700 rounded w-full mt-4 mb-6 text-center">
                     <p class="mb-2">
                       Please complete your health record to continue.
@@ -530,10 +534,6 @@ export default function HealthRecord() {
                   </div>
                 </Show>
               </div>
-            </Match>
-
-            <Match when={true}>
-              <div class="text-center p-4 w-full">Loading health record...</div>
             </Match>
           </Switch>
         </Suspense>

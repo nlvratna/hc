@@ -4,14 +4,15 @@ import { Card } from "../components/Card";
 import { Input } from "../components/Input";
 import { useAuth } from "../AuthContext";
 import HealthRecord from "./healthRecord/HealthRecord";
+import { useNavigate } from "@solidjs/router";
 
-// add zod validation
+interface Props {
+  userName: string;
+  email: string;
+  password: string;
+}
+
 export default function SignUp() {
-  interface Props {
-    userName: string;
-    email: string;
-    password: string;
-  }
   const { login } = useAuth();
   const [data, setData] = createSignal<Props>({
     userName: "",
@@ -21,7 +22,7 @@ export default function SignUp() {
   const [clicked, setClick] = createSignal<boolean>(false);
   const [loading, setLoading] = createSignal<boolean>(false);
   const [err, setErr] = createSignal<string>("");
-  const [signUpComplete, setSignUp] = createSignal(false);
+  const navigate = useNavigate();
 
   const register = async () => {
     try {
@@ -36,7 +37,7 @@ export default function SignUp() {
       }
       localStorage.setItem("token", details.accessToken);
       login(details.user);
-      setSignUp(true);
+      navigate("/health-record", { state: "signup" });
     } catch (err: any) {
       setErr(err);
     } finally {
@@ -101,15 +102,10 @@ export default function SignUp() {
     </Card>
   );
 
+  //TODO : change this later
   return (
     <>
-      <div class="min-h-screen flex justify-center items-center">
-        <Show when={signUpComplete()} fallback={signup}>
-          <Suspense fallback={<div>loading...</div>}>
-            <HealthRecord />
-          </Suspense>
-        </Show>
-      </div>
+      <div class="min-h-screen flex justify-center items-center">{signup}</div>
     </>
   );
 }

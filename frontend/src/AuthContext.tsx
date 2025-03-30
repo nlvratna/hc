@@ -47,7 +47,8 @@ const AuthProvider: ParentComponent = (props) => {
   //     setUserLog(false);
   //   }
   // };
-  // onMount(() => checkUserLog());
+
+  onMount(async () => tokenExpire());
 
   // onCleanup(() => logout());
 

@@ -1,9 +1,13 @@
 import { createStore } from "solid-js/store";
-import { Gender } from "./types";
-import { HOME_URL } from "../../Config";
 import { apiRequest } from "../../utils";
+import { HOME_URL } from "../../Config";
 
-// Define the types properly
+export enum Gender {
+  Male = "Male",
+  Female = "Female",
+  Other = "Other",
+}
+
 export interface Medication {
   name: string;
   prescription: string;
@@ -18,13 +22,12 @@ export interface HealthRecordInput {
   };
   submitted: boolean;
   err: string;
-  isNewUser: boolean;
+  isDataAvailable: boolean;
 }
 
-// Create an initial empty date to use as default
 const defaultDate = new Date();
 
-// Main health record store with isNewUser flag
+// State Management
 export const [data, setData] = createStore<HealthRecordInput>({
   details: {
     age: null,
@@ -33,10 +36,9 @@ export const [data, setData] = createStore<HealthRecordInput>({
   },
   submitted: false,
   err: "",
-  isNewUser: false,
+  isDataAvailable: false,
 });
 
-// Temporary store for new medication being added
 export const [medicationData, setMedicationData] = createStore({
   details: {
     name: "",
@@ -46,34 +48,23 @@ export const [medicationData, setMedicationData] = createStore({
   err: "",
 });
 
-// Initialize data from API response - handle both existing users and new users
-export const initializeData = (recordResponse: any) => {
-  if (recordResponse?.healthRecord) {
-    // Existing user with health record
-    setData("isNewUser", false);
-    setData("details", {
-      age: recordResponse.healthRecord.age
-        ? new Date(recordResponse.healthRecord.age)
-        : null,
-      gender: recordResponse.healthRecord.gender || Gender.Male,
-      medication: recordResponse.healthRecord.medication || [],
-    });
+export const initializeData = (data: null | any) => {
+  if (data === null) {
+    setData("isDataAvailable", false);
   } else {
-    // New user without health record
-    setData("isNewUser", true);
+    setData("isDataAvailable", true);
     setData("details", {
-      age: null,
-      gender: Gender.Male,
-      medication: [],
+      age: data.healthRecord.age ? new Date(data.healthRecord.age) : null,
+      gender: data.healthRecord.gender || Gender.Male,
+      medication: data.healthRecord.medication || [],
     });
   }
 };
 
-// Add medication function
+// Form Management
 export const addMedication = () => {
   const med = medicationData.details;
 
-  // Validate inputs
   if (!med.name) {
     setMedicationData("err", "Name is required for medication details");
     return false;
@@ -84,36 +75,30 @@ export const addMedication = () => {
     return false;
   }
 
-  // Add to medications array
-  setData("details", "medication", (prev) => [
-    ...prev,
-    {
-      name: med.name,
-      prescription: med.prescription,
-      reportedAt: med.reportedAt,
-    },
-  ]);
+  setData("details", "medication", (prev) => [...prev, { ...med }]);
 
-  // Reset form
   setMedicationData("details", {
     name: "",
     prescription: "",
-    reportedAt: defaultDate,
+    reportedAt: new Date(),
   });
   setMedicationData("err", "");
 
   return true;
 };
 
-// Delete medication function
 export const deleteMedication = (index: number) => {
   setData("details", "medication", (medications) =>
     medications.filter((_, i) => i !== index),
   );
 };
 
-// Update existing medication function
-export const updateMedication = (index: number, updatedMed: Medication) => {
+//send an api request to update in backend
+export const updateMedication = (
+  index: number,
+  medicationId: number,
+  updatedMed: Medication,
+) => {
   setData("details", "medication", (medications) => {
     const newMedications = [...medications];
     newMedications[index] = updatedMed;
@@ -121,13 +106,12 @@ export const updateMedication = (index: number, updatedMed: Medication) => {
   });
 };
 
-// Submit the entire health record
 export const submitHealthRecord = async () => {
   try {
     setData("submitted", true);
 
-    // Choose the appropriate endpoint based on whether it's a new user or not
-    const endpoint = data.isNewUser
+    //if user skips the endpoint is going to be the same after handle that
+    const endpoint = data.isDataAvailable
       ? `${HOME_URL}/health-record/create`
       : `${HOME_URL}/health-record/update`;
 
@@ -135,13 +119,13 @@ export const submitHealthRecord = async () => {
       method: "POST",
       body: JSON.stringify(data.details),
     });
-    if (err) setData("err", err);
 
-    // After successful submission, mark as no longer a new user
-    if (data.isNewUser) {
-      setData("isNewUser", false);
+    if (err) {
+      setData("err", err);
+      return false;
     }
 
+    setData("isDataAvailable", true);
     return true;
   } catch (error: any) {
     setData("err", error.message || "Failed to submit health record");

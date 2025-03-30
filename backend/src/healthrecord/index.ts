@@ -16,6 +16,11 @@ healthRecordRoute.get("/record", async (req, res) => {
     const healthRecord = await prisma.healthRecord.findUnique({
       where: { userId: id },
     })
+    if (!healthRecord) {
+      console.log("no healthRecord")
+      res.status(404).json({ err: "No Health Record is found" })
+      return
+    }
 
     res.json({ healthRecord })
   } catch (err) {
