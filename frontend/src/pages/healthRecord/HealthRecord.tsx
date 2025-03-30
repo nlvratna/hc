@@ -20,36 +20,27 @@ const getRecord = async () => {
   return data;
 };
 
+// SVG for edit icon
+const EditIcon = () => (
+  //todo get that assest
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    class="h-5 w-5 cursor-pointer"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+    />
+  </svg>
+);
 export default function HealthRecord() {
   const [recordResponse] = createResource(getRecord);
-  const [editingField, setEditingField] = createSignal(null);
-
-  const toggleEdit = (field: any) => {
-    if (editingField() === field) {
-      setEditingField(null);
-    } else {
-      setEditingField(field);
-    }
-  };
-
-  // SVG for edit icon
-  const EditIcon = () => (
-    //todo get that assest
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      class="h-5 w-5 cursor-pointer"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="2"
-        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-      />
-    </svg>
-  );
+  const [editing, setEditing] = createSignal(false);
 
   return (
     <>
@@ -72,13 +63,16 @@ export default function HealthRecord() {
               </div>
             </Match>
             <Match when={recordResponse()}>
-              <div class="flex flex-col justify-center  mt-8 ">
+              <div class="flex flex-col justify-evenly m-8  ">
                 {/* Header */}
                 <div class="bg-green-500 text-white p-4 flex justify-between items-center w-full">
                   <h2 class="text-xl font-bold text-center w-full">
                     Health Record
                   </h2>
-                  <button class="bg-white text-green-500 p-2 rounded-full hover:bg-green-100 transition duration-200">
+                  <button
+                    class="bg-white cursor-pointer  text-green-500 p-2 rounded-full hover:bg-green-100 transition duration-200"
+                    onClick={() => setEditing(true)}
+                  >
                     <EditIcon />
                   </button>
                 </div>
@@ -94,7 +88,7 @@ export default function HealthRecord() {
                         </h3>
                       </div>
                       <Show
-                        when={editingField() === "age"}
+                        when={editing()}
                         fallback={
                           <p class="text-gray-700 text-lg">
                             {recordResponse()?.healthRecord?.age ? (
@@ -136,7 +130,7 @@ export default function HealthRecord() {
                         </h3>
                       </div>
                       <Show
-                        when={editingField() === "gender"}
+                        when={editing()}
                         fallback={
                           <p class="text-gray-700 text-lg">
                             {recordResponse()?.healthRecord?.gender || (
@@ -256,11 +250,7 @@ export default function HealthRecord() {
                                 Reported:
                                 {new Date(medication.reportedAt).toDateString()}
                               </div>
-                              <Show
-                                when={
-                                  editingField() === `medication-${index()}`
-                                }
-                              >
+                              <Show when={editing()}>
                                 <div class="mt-3 pt-3 border-t border-gray-200">
                                   <div class="mb-2">
                                     <input

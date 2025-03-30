@@ -1,6 +1,7 @@
 export enum Gender {
   Male = "male",
   Female = "female",
+  Other = "other",
 }
 export const date: Date = new Date();
 export interface healthRecord {

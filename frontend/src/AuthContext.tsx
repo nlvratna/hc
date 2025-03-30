@@ -36,17 +36,18 @@ const AuthProvider: ParentComponent = (props) => {
     setUser(null);
     setUserLog(false);
   };
-  // const checkUserLog = async () => {
-  //   // may be not useful
-  //   // not useful
-  //   try {
-  //     await tokenExpire();
-  //     setUserLog(true);
-  //   } catch (err: any) {
-  //     setUserLog(false);
-  //   }
-  // };
-  // onMount(() => checkUserLog());
+
+  const checkUserLog = async () => {
+    // may be not useful
+    // not useful
+    try {
+      await tokenExpire();
+      setUserLog(true);
+    } catch (err: any) {
+      setUserLog(false);
+    }
+  };
+  onMount(() => checkUserLog());
 
   // onCleanup(() => logout());
 

@@ -39,17 +39,20 @@ export const tokenExpire = async () => {
     const difference = Math.floor(
       (-now.getTime() + exp.getTime()) / (1000 * 60),
     );
-    if (difference < 3) {
-      const response = await fetch(`${HOME_URL}/auth/access-token`, {
+    if (difference <= 3) {
+      console.log("request to get new token is sent");
+      const response = await fetch("http://localhost:4840/auth/access-token", {
         headers: {
           authorization: `Bearer ${token}`,
         },
+        credentials: "include",
       });
       if (response.status === 303) {
         alert("session expired please login again");
         window.location.href = "/login";
       }
       const data = await response.json();
+      console.log(data);
       localStorage.setItem("token", data.accessToken);
     }
   } catch (err: any) {

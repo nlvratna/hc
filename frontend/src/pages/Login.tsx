@@ -22,7 +22,7 @@ export default function Login() {
     setState("submitting", true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      // await new Promise((resolve) => setTimeout(resolve, 5000));
 
       const response = await fetch("http://localhost:4840/auth/login", {
         method: "POST",

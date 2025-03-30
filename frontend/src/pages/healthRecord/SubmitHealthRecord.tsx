@@ -1,58 +1,24 @@
 import { Index, Show } from "solid-js";
-import { createStore } from "solid-js/store";
 import { apiRequest } from "../../utils";
-import { HOME_URL } from "../../Config";
-import { date, healthRecordInput, medication, Gender } from "./types";
 import DatePicker from "@rnwonder/solid-date-picker";
 import "@rnwonder/solid-date-picker/dist/style.css";
-//create page to show healthRecord and test this page
+import {
+  addFunction,
+  data,
+  deleteFunction,
+  meidcalData,
+  setData,
+  setMedicalData,
+} from "./actions";
+import { Gender } from "./types";
+
 export default function SubmitHealthRecord() {
-  const [data, setData] = createStore<healthRecordInput>({
-    details: {
-      age: date,
-      gender: Gender.Male,
-      familyHistory: [] as string[],
-      medication: [] as medication[],
-    },
-    submitted: false,
-    err: "",
-  });
-  const [meidcalData, setMedicalData] = createStore({
-    details: { name: "", prescription: "", reportedAt: date },
-    err: "",
-  });
-
-  const addFunction = () => {
-    const data = meidcalData.details;
-    if (!data.name) {
-      setMedicalData("err", "name is required for medication details");
-    }
-    if (!data.reportedAt) {
-      setMedicalData("err", `the time ${data.name} is required`);
-    }
-    setData("details", "medication", (prev) => [
-      ...prev,
-      {
-        name: data.name,
-        prescription: data.prescription,
-        reportedAt: data.reportedAt as unknown as Date,
-      },
-    ]);
-    setMedicalData("details", { name: "", prescription: "", reportedAt: date });
-  };
-
-  const deleteFunction = (index: number) => {
-    setData("details", "medication", (medications) =>
-      medications.filter((_, i) => i !== index),
-    );
-  };
-
   const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
     setData("submitted", true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 4000));
-      const { _data, err } = await apiRequest(
+      // await new Promise((resolve) => setTimeout(resolve, 4000));
+      const { err } = await apiRequest(
         `http://localhost:4840/health-record/add-health-record`,
         {
           method: "POST",
@@ -97,49 +63,28 @@ export default function SubmitHealthRecord() {
               <label class="block text-gray-700 font-semibold mb-2">
                 Date of Birth
               </label>
-              <DatePicker
-                //@ts-ignore
-                onChange={(value) => setData("details", "age", value)}
-              />
+              <div class="w-full border rounded border-gray-200 mb-2 ">
+                <DatePicker
+                  //@ts-ignore
+                  onChange={(value) => setData("details", "age", value)}
+                />
+              </div>
             </div>
 
             {/* Gender Selection */}
             <div class="bg-white p-4 rounded-lg shadow-md">
-              <label class="block text-gray-700 font-semibold mb-2">
-                Gender
-              </label>
-              <div class="flex space-x-4">
-                <label class="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="gender"
-                    class="form-radio text-blue-500"
-                    value={data.details.gender}
-                    onChange={() =>
-                      setData("details", {
-                        ...data.details,
-                        gender: Gender.Male,
-                      })
-                    }
-                  />
-                  <span class="ml-2 text-gray-700">Male</span>
-                </label>
-                <label class="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="gender"
-                    class="form-radio text-blue-500"
-                    value={data.details.gender}
-                    onChange={() =>
-                      setData("details", {
-                        ...data.details,
-                        gender: Gender.Female,
-                      })
-                    }
-                  />
-                  <span class="ml-2 text-gray-700">Female</span>
-                </label>
-              </div>
+              <div class="block text-gray-700 font-semibold mb-2"> Gender</div>
+              <select
+                class="border rounded p-2 flex-grow w-full"
+                onChange={(e) =>
+                  setData("details", "gender", e.target.value as Gender)
+                }
+                value={data.details.gender}
+              >
+                <option value={Gender.Male}>Male</option>
+                <option value={Gender.Female}>Female</option>
+                <option value={Gender.Other}>Other</option>
+              </select>
             </div>
           </div>
 

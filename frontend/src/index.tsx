@@ -1,15 +1,9 @@
 /* @refresh reload */
 import { render } from "solid-js/web";
 
+import "@rnwonder/solid-date-picker/dist/style.css";
 import "./index.css";
 import App from "./App";
-import Header from "./components/Header";
-import { Route, Router } from "@solidjs/router";
-import { ParentComponent } from "solid-js";
-import Login from "./Login";
-import SignUp from "./SignUp";
-import { AuthProvider } from "./AuthContext";
-import NotFound from "./NotFound";
 
 const root = document.getElementById("root");
 
