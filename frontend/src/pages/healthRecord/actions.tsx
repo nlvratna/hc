@@ -111,7 +111,7 @@ export const submitHealthRecord = async () => {
     setData("submitted", true);
 
     //if user skips the endpoint is going to be the same after handle that
-    const endpoint = data.isDataAvailable
+    const endpoint = !data.isDataAvailable
       ? `${HOME_URL}/health-record/create`
       : `${HOME_URL}/health-record/update`;
 

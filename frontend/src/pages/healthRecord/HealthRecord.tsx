@@ -1,3 +1,4 @@
+//still some methods like add new medication for an exising one delete medication  that is existing update the update medication function
 import {
   createResource,
   createSignal,
@@ -83,6 +84,7 @@ export default function HealthRecord() {
     setSaving(true);
     try {
       const success = await submitHealthRecord();
+      //add here something
       if (success) {
         setEditing(false);
         setAddingMedication(false);
@@ -148,7 +150,7 @@ export default function HealthRecord() {
                           onClick={handleSave}
                           disabled={saving()}
                         >
-                          {saving() ? "Saving..." : "Save"}
+                          {skip() ? "skip" : "save"}
                         </button>
                       </div>
                     }
@@ -347,7 +349,7 @@ export default function HealthRecord() {
                         </Show>
                         <div class="flex justify-end gap-2">
                           <button
-                            class="px-3 py-1 text-gray-500 border border-gray-500 rounded hover:bg-gray-50"
+                            class=" cursor-pointer px-3 py-1 text-gray-500 border border-gray-500 rounded hover:bg-gray-50"
                             onClick={() => {
                               setAddingMedication(false);
                               setMedicationData("details", {
@@ -404,8 +406,8 @@ export default function HealthRecord() {
                       }
                     >
                       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <Show when={data.details.medication.length > 1}>
-                          <For each={recordResponse()?.healthRecord.medication}>
+                        <Show when={data.details.medication.length > 0}>
+                          <For each={data.details.medication}>
                             {(medication, index) => (
                               <div class="border rounded-lg p-4 flex flex-col">
                                 <div class="flex justify-between items-start">

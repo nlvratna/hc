@@ -7,6 +7,7 @@ import { Card } from "../components/Card";
 import { Input } from "../components/Input";
 
 // this is slightly flawed
+// add error object fix here and signup page
 export default function Login() {
   const { login } = useAuth();
   const [clicked, setClick] = createSignal<boolean>(false);
