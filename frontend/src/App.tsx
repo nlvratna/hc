@@ -27,23 +27,15 @@ const Layout: ParentComponent = (props) => {
 };
 const App: Component = () => {
   return (
-    <Suspense
-      fallback={
-        <div class="flex justify-center items-center h-64 w-full">
-          <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
-        </div>
-      }
-    >
-      <AuthProvider>
-        <Router root={Layout}>
-          <Route path="/" component={LandingPage} />
-          <Route path="/login" component={Login} />
-          <Route path="/signup" component={SignUp} />
-          <Route path="*404" component={NotFound} />
-          <Route path="/health-record" component={HealthRecord} />
-        </Router>
-      </AuthProvider>
-    </Suspense>
+    <AuthProvider>
+      <Router root={Layout}>
+        <Route path="/" component={LandingPage} />
+        <Route path="/login" component={Login} />
+        <Route path="/signup" component={SignUp} />
+        <Route path="*404" component={NotFound} />
+        <Route path="/health-record" component={HealthRecord} />
+      </Router>
+    </AuthProvider>
   );
 };
 
