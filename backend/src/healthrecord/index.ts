@@ -36,7 +36,7 @@ type medicationData = {
 }
 
 healthRecordRoute.post(
-  "/add-health-record",
+  "/create",
   async (req: Request<{}, {}, RequestBody>, res) => {
     try {
       const { age, gender, familyHistory, Medication } = req.body
@@ -71,7 +71,7 @@ healthRecordRoute.post(
 )
 
 // change primary details  age family History gender
-healthRecordRoute.patch("/update-primary-health-record", async (req, res) => {
+healthRecordRoute.patch("/update", async (req, res) => {
   try {
     const id = req.user?.id
 

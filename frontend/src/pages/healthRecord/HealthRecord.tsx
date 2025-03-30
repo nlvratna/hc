@@ -7,22 +7,43 @@ import {
   Show,
   Suspense,
   Switch,
+  onMount,
 } from "solid-js";
 import { apiRequest } from "../../utils";
 import { HOME_URL } from "../../Config";
+import {
+  data,
+  setData,
+  medicationData,
+  setMedicationData,
+  addMedication,
+  deleteMedication,
+  updateMedication,
+  initializeData,
+  submitHealthRecord,
+} from "./actions";
+import { Gender } from "./types";
 
 const getRecord = async () => {
-  const { data, err } = await apiRequest(`${HOME_URL}/health-record/record`);
-  if (err !== null) {
-    console.error(err);
-    throw err;
+  try {
+    const { data, err } = await apiRequest(`${HOME_URL}/health-record/record`);
+    if (err !== null) {
+      // If the error is 404, it means the user doesn't have a record yet
+      if (err.status === 404) {
+        return { newUser: true };
+      }
+      console.error(err);
+      throw err;
+    }
+    return data;
+  } catch (error) {
+    console.error("Error fetching health record:", error);
+    throw error;
   }
-  return data;
 };
 
 // SVG for edit icon
 const EditIcon = () => (
-  //todo get that assest
   <svg
     xmlns="http://www.w3.org/2000/svg"
     class="h-5 w-5 cursor-pointer"
@@ -38,9 +59,61 @@ const EditIcon = () => (
     />
   </svg>
 );
+
 export default function HealthRecord() {
   const [recordResponse] = createResource(getRecord);
   const [editing, setEditing] = createSignal(false);
+  const [addingMedication, setAddingMedication] = createSignal(false);
+  const [editingMedicationIndex, setEditingMedicationIndex] = createSignal(-1);
+  const [saving, setSaving] = createSignal(false);
+
+  // Initialize data when record loads
+  onMount(() => {
+    if (recordResponse()) {
+      initializeData(recordResponse());
+
+      // If it's a new user, automatically enable editing mode
+      if (recordResponse().newUser || data.isNewUser) {
+        setEditing(true);
+      }
+    }
+  });
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const success = await submitHealthRecord();
+      if (success) {
+        setEditing(false);
+        setAddingMedication(false);
+        setEditingMedicationIndex(-1);
+      }
+    } catch (error) {
+      console.error("Error saving health record:", error);
+      setData("err", "Failed to save health record");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    // If it's a new user and they cancel, we keep them in editing mode
+    // since they need to create a record
+    if (data.isNewUser) {
+      // Just reset the form without exiting edit mode
+      initializeData({ newUser: true });
+      setAddingMedication(false);
+      setEditingMedicationIndex(-1);
+    } else {
+      // Reset to original data for existing users
+      if (recordResponse()) {
+        initializeData(recordResponse());
+      }
+      setEditing(false);
+      setAddingMedication(false);
+      setEditingMedicationIndex(-1);
+    }
+  };
 
   return (
     <>
@@ -52,30 +125,59 @@ export default function HealthRecord() {
             </div>
           }
         >
-          <Switch
-            fallback={
-              <div class="text-center p-4 w-full">No health record found</div>
-            }
-          >
-            <Match when={recordResponse.error}>
+          <Switch>
+            <Match
+              when={recordResponse.error && recordResponse.error.status !== 404}
+            >
               <div class="p-4 bg-red-100 text-red-700 rounded w-full">
                 Something went wrong loading your health record
               </div>
             </Match>
-            <Match when={recordResponse()}>
-              <div class="flex flex-col justify-evenly m-8  ">
+
+            <Match when={recordResponse() || data.isNewUser}>
+              <div class="flex flex-col justify-evenly m-8">
                 {/* Header */}
                 <div class="bg-green-500 text-white p-4 flex justify-between items-center w-full">
                   <h2 class="text-xl font-bold text-center w-full">
-                    Health Record
+                    {data.isNewUser ? "Create Health Record" : "Health Record"}
                   </h2>
-                  <button
-                    class="bg-white cursor-pointer  text-green-500 p-2 rounded-full hover:bg-green-100 transition duration-200"
-                    onClick={() => setEditing(true)}
+                  <Show
+                    when={!editing()}
+                    fallback={
+                      <div class="flex gap-2">
+                        <Show when={!data.isNewUser}>
+                          <button
+                            class="bg-white text-red-500 p-2 rounded hover:bg-red-100 transition duration-200"
+                            onClick={handleCancel}
+                          >
+                            Cancel
+                          </button>
+                        </Show>
+                        <button
+                          class="bg-white text-green-500 p-2 rounded hover:bg-green-100 transition duration-200"
+                          onClick={handleSave}
+                          disabled={saving()}
+                        >
+                          {saving() ? "Saving..." : "Save"}
+                        </button>
+                      </div>
+                    }
                   >
-                    <EditIcon />
-                  </button>
+                    <button
+                      class="bg-white cursor-pointer text-green-500 p-2 rounded-full hover:bg-green-100 transition duration-200"
+                      onClick={() => setEditing(true)}
+                    >
+                      <EditIcon />
+                    </button>
+                  </Show>
                 </div>
+
+                {/* Show error message if there's an error */}
+                <Show when={data.err}>
+                  <div class="p-4 bg-red-100 text-red-700 rounded w-full mt-4">
+                    {data.err}
+                  </div>
+                </Show>
 
                 {/* Content */}
                 <div class="p-6">
@@ -86,15 +188,14 @@ export default function HealthRecord() {
                         <h3 class="text-lg font-semibold text-gray-800">
                           Date of Birth
                         </h3>
+                        {}
                       </div>
                       <Show
                         when={editing()}
                         fallback={
                           <p class="text-gray-700 text-lg">
-                            {recordResponse()?.healthRecord?.age ? (
-                              new Date(
-                                recordResponse().healthRecord.age,
-                              ).toDateString()
+                            {data.details.age ? (
+                              new Date(data.details.age).toDateString()
                             ) : (
                               <span class="text-gray-400">
                                 No date of birth recorded
@@ -108,16 +209,22 @@ export default function HealthRecord() {
                             type="date"
                             class="border rounded p-2 flex-grow"
                             value={
-                              recordResponse()?.healthRecord?.age
-                                ? new Date(recordResponse().healthRecord.age)
+                              data.details.age
+                                ? new Date(data.details.age)
                                     .toISOString()
                                     .split("T")[0]
                                 : ""
                             }
+                            onChange={(e) =>
+                              setData(
+                                "details",
+                                "age",
+                                e.target.value
+                                  ? new Date(e.target.value)
+                                  : null,
+                              )
+                            }
                           />
-                          <button class="ml-2 bg-green-500 text-white px-4 py-2 rounded">
-                            Save
-                          </button>
                         </div>
                       </Show>
                     </div>
@@ -133,7 +240,7 @@ export default function HealthRecord() {
                         when={editing()}
                         fallback={
                           <p class="text-gray-700 text-lg">
-                            {recordResponse()?.healthRecord?.gender || (
+                            {data.details.gender || (
                               <span class="text-gray-400">
                                 No gender recorded
                               </span>
@@ -142,39 +249,21 @@ export default function HealthRecord() {
                         }
                       >
                         <div class="flex">
-                          <select class="border rounded p-2 flex-grow">
-                            <option value="">Select gender</option>
-                            <option
-                              value="male"
-                              selected={
-                                recordResponse()?.healthRecord?.gender ===
-                                "male"
-                              }
-                            >
-                              Male
-                            </option>
-                            <option
-                              value="female"
-                              selected={
-                                recordResponse()?.healthRecord?.gender ===
-                                "female"
-                              }
-                            >
-                              Female
-                            </option>
-                            <option
-                              value="other"
-                              selected={
-                                recordResponse()?.healthRecord?.gender ===
-                                "other"
-                              }
-                            >
-                              Other
-                            </option>
+                          <select
+                            class="border rounded p-2 flex-grow w-full"
+                            onChange={(e) =>
+                              setData(
+                                "details",
+                                "gender",
+                                e.target.value as Gender,
+                              )
+                            }
+                            value={data.details.gender}
+                          >
+                            <option value={Gender.Male}>Male</option>
+                            <option value={Gender.Female}>Female</option>
+                            <option value={Gender.Other}>Other</option>
                           </select>
-                          <button class="ml-2 bg-green-500 text-white px-4 py-2 rounded">
-                            Save
-                          </button>
                         </div>
                       </Show>
                     </div>
@@ -186,35 +275,12 @@ export default function HealthRecord() {
                       <h3 class="text-lg font-semibold text-gray-800">
                         Medications
                       </h3>
-                      <div class="flex gap-2">
-                        <button class="cursor-pointer flex items-center text-blue-500 border border-blue-500 px-3 py-1 rounded hover:bg-blue-50 transition">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="h-5 w-5 mr-1"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+                      <Show when={editing()}>
+                        <div class="flex gap-2">
+                          <button
+                            class="cursor-pointer flex items-center text-blue-500 border border-blue-500 px-3 py-1 rounded hover:bg-blue-50 transition"
+                            onClick={() => setAddingMedication(true)}
                           >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M12 4v16m8-8H4"
-                            />
-                          </svg>
-                          Add
-                        </button>
-                      </div>
-                    </div>
-
-                    <Show
-                      when={
-                        recordResponse()?.healthRecord?.medication?.length > 0
-                      }
-                      fallback={
-                        <div class="text-gray-400 text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
-                          <p>No medications recorded</p>
-                          <button class=" cursor-pointer mt-3 flex items-center text-blue-500 mx-auto hover:text-blue-700">
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
                               class="h-5 w-5 mr-1"
@@ -229,28 +295,155 @@ export default function HealthRecord() {
                                 d="M12 4v16m8-8H4"
                               />
                             </svg>
-                            Add medication
+                            Add
                           </button>
+                        </div>
+                      </Show>
+                    </div>
+
+                    {/* Add Medication Form */}
+                    <Show when={addingMedication()}>
+                      <div class="border rounded-lg p-4 mb-6 bg-gray-50">
+                        <h4 class="font-medium text-gray-800 mb-4">
+                          Add New Medication
+                        </h4>
+                        <div class="mb-2">
+                          <input
+                            type="text"
+                            value={medicationData.details.name}
+                            class="border rounded p-2 w-full mb-2"
+                            placeholder="Medication name"
+                            onChange={(e) =>
+                              setMedicationData(
+                                "details",
+                                "name",
+                                e.target.value,
+                              )
+                            }
+                          />
+                          <textarea
+                            class="border rounded p-2 w-full h-20 mb-2"
+                            placeholder="Prescription details"
+                            value={medicationData.details.prescription}
+                            onChange={(e) =>
+                              setMedicationData(
+                                "details",
+                                "prescription",
+                                e.target.value,
+                              )
+                            }
+                          />
+                          <input
+                            type="date"
+                            value={
+                              new Date(medicationData.details.reportedAt)
+                                .toISOString()
+                                .split("T")[0]
+                            }
+                            class="border rounded p-2 w-full"
+                            onChange={(e) =>
+                              setMedicationData(
+                                "details",
+                                "reportedAt",
+                                new Date(e.target.value),
+                              )
+                            }
+                          />
+                        </div>
+                        <Show when={medicationData.err}>
+                          <p class="text-red-500 mb-2">{medicationData.err}</p>
+                        </Show>
+                        <div class="flex justify-end gap-2">
+                          <button
+                            class="px-3 py-1 text-gray-500 border border-gray-500 rounded hover:bg-gray-50"
+                            onClick={() => {
+                              setAddingMedication(false);
+                              setMedicationData("details", {
+                                name: "",
+                                prescription: "",
+                                reportedAt: new Date(),
+                              });
+                              setMedicationData("err", "");
+                            }}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            class="px-3 py-1 text-white bg-green-500 rounded hover:bg-green-600"
+                            onClick={() => {
+                              if (addMedication()) {
+                                setAddingMedication(false);
+                              }
+                            }}
+                          >
+                            Add Medication
+                          </button>
+                        </div>
+                      </div>
+                    </Show>
+
+                    <Show
+                      when={data.details.medication.length > 0}
+                      fallback={
+                        <div class="text-gray-400 text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                          <p>No medications recorded</p>
+                          <Show when={editing()}>
+                            <button
+                              class="cursor-pointer mt-3 flex items-center text-blue-500 mx-auto hover:text-blue-700"
+                              onClick={() => setAddingMedication(true)}
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="h-5 w-5 mr-1"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M12 4v16m8-8H4"
+                                />
+                              </svg>
+                              Add medication
+                            </button>
+                          </Show>
                         </div>
                       }
                     >
                       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <For each={recordResponse().healthRecord.medication}>
+                        <For each={data.details.medication}>
                           {(medication, index) => (
                             <div class="border rounded-lg p-4 flex flex-col">
                               <div class="flex justify-between items-start">
                                 <div class="font-medium text-gray-800 text-lg">
                                   {medication.name}
                                 </div>
+                                <Show when={editing()}>
+                                  <button
+                                    class="text-blue-500"
+                                    onClick={() =>
+                                      setEditingMedicationIndex(index())
+                                    }
+                                  >
+                                    <EditIcon />
+                                  </button>
+                                </Show>
                               </div>
                               <div class="text-md mt-2 text-gray-600">
                                 {medication.prescription}
                               </div>
                               <div class="text-sm mt-auto pt-3 text-gray-500">
-                                Reported:
+                                Reported:{" "}
                                 {new Date(medication.reportedAt).toDateString()}
                               </div>
-                              <Show when={editing()}>
+                              <Show
+                                when={
+                                  editing() &&
+                                  editingMedicationIndex() === index()
+                                }
+                              >
                                 <div class="mt-3 pt-3 border-t border-gray-200">
                                   <div class="mb-2">
                                     <input
@@ -258,13 +451,26 @@ export default function HealthRecord() {
                                       value={medication.name}
                                       class="border rounded p-2 w-full mb-2"
                                       placeholder="Medication name"
+                                      onChange={(e) => {
+                                        const updated = {
+                                          ...medication,
+                                          name: e.target.value,
+                                        };
+                                        updateMedication(index(), updated);
+                                      }}
                                     />
                                     <textarea
                                       class="border rounded p-2 w-full h-20 mb-2"
                                       placeholder="Prescription details"
-                                    >
-                                      {medication.prescription}
-                                    </textarea>
+                                      value={medication.prescription}
+                                      onChange={(e) => {
+                                        const updated = {
+                                          ...medication,
+                                          prescription: e.target.value,
+                                        };
+                                        updateMedication(index(), updated);
+                                      }}
+                                    ></textarea>
                                     <input
                                       type="date"
                                       value={
@@ -273,14 +479,29 @@ export default function HealthRecord() {
                                           .split("T")[0]
                                       }
                                       class="border rounded p-2 w-full"
+                                      onChange={(e) => {
+                                        const updated = {
+                                          ...medication,
+                                          reportedAt: new Date(e.target.value),
+                                        };
+                                        updateMedication(index(), updated);
+                                      }}
                                     />
                                   </div>
                                   <div class="flex justify-end gap-2">
-                                    <button class="px-3 py-1 text-red-500 border border-red-500 rounded hover:bg-red-50">
+                                    <button
+                                      class="px-3 py-1 text-red-500 border border-red-500 rounded hover:bg-red-50"
+                                      onClick={() => deleteMedication(index())}
+                                    >
                                       Delete
                                     </button>
-                                    <button class="px-3 py-1 text-white bg-green-500 rounded hover:bg-green-600">
-                                      Save
+                                    <button
+                                      class="px-3 py-1 text-gray-500 border border-gray-500 rounded hover:bg-gray-50"
+                                      onClick={() =>
+                                        setEditingMedicationIndex(-1)
+                                      }
+                                    >
+                                      Done
                                     </button>
                                   </div>
                                 </div>
@@ -292,7 +513,27 @@ export default function HealthRecord() {
                     </Show>
                   </div>
                 </div>
+
+                {/* New User Call-to-Action */}
+                <Show when={data.isNewUser}>
+                  <div class="p-4 bg-blue-50 text-blue-700 rounded w-full mt-4 mb-6 text-center">
+                    <p class="mb-2">
+                      Please complete your health record to continue.
+                    </p>
+                    <button
+                      class="inline-block px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-200"
+                      onClick={handleSave}
+                      disabled={saving()}
+                    >
+                      {saving() ? "Creating Record..." : "Create Health Record"}
+                    </button>
+                  </div>
+                </Show>
               </div>
+            </Match>
+
+            <Match when={true}>
+              <div class="text-center p-4 w-full">Loading health record...</div>
             </Match>
           </Switch>
         </Suspense>
@@ -300,5 +541,3 @@ export default function HealthRecord() {
     </>
   );
 }
-
-//TODO remove familyHistory maybe yep sure

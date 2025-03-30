@@ -3,7 +3,7 @@ export enum Gender {
   Female = "female",
   Other = "other",
 }
-export const date: Date = new Date();
+export const date = new Date();
 export interface healthRecord {
   age: typeof date;
   gender: Gender;

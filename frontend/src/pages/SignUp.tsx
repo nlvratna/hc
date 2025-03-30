@@ -3,7 +3,7 @@ import { HOME_URL } from "../Config";
 import { Card } from "../components/Card";
 import { Input } from "../components/Input";
 import { useAuth } from "../AuthContext";
-import SubmitHealthRecord from "./healthRecord/SubmitHealthRecord";
+import HealthRecord from "./healthRecord/HealthRecord";
 
 // add zod validation
 export default function SignUp() {
@@ -106,7 +106,7 @@ export default function SignUp() {
       <div class="min-h-screen flex justify-center items-center">
         <Show when={signUpComplete()} fallback={signup}>
           <Suspense fallback={<div>loading...</div>}>
-            <SubmitHealthRecord />
+            <HealthRecord />
           </Suspense>
         </Show>
       </div>
