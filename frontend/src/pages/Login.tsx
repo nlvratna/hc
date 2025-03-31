@@ -39,7 +39,7 @@ export default function Login() {
       }
       login(data.user);
       localStorage.setItem("token", data.accessToken);
-      navigate("/");
+      navigate("/chat");
     } catch (err: any) {
       setState("err", err || "login failed");
     } finally {

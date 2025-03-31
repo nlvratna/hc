@@ -6,9 +6,6 @@ export default function LandingPage() {
   const { userLog, user } = useAuth();
   return (
     <>
-      <Show when={userLog()} fallback={<div> not working </div>}>
-        <HealthRecord />
-      </Show>
       <div class="text-green-500 text-3xl text-center"> LandingPage </div>
     </>
   );
