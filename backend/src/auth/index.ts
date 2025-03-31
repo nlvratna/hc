@@ -63,6 +63,7 @@ authRoute.post("/signup", async (req, res) => {
         httpOnly: true,
         sameSite: true,
         secure: true,
+        path: "/",
       })
       .status(200)
       .json({ accessToken })
@@ -110,8 +111,9 @@ authRoute.post("/login", async (req, res) => {
       .cookie("refreshToken", refreshToken, {
         maxAge: 30 * 24 * 60 * 60,
         httpOnly: true,
-        sameSite: true,
+        sameSite: "lax",
         secure: true,
+        path: "/",
       })
       .status(200)
       .json({ user: loggedUser, accessToken })

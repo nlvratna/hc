@@ -1,8 +1,8 @@
 import { useNavigate } from "@solidjs/router";
 import { useAuth } from "../AuthContext";
 import {
-  Component,
-  ParentComponent,
+  For,
+  Index,
   Show,
   createEffect,
   createSignal,
@@ -21,35 +21,45 @@ interface Message {
   sender: Sender;
 }
 
+// try to send request to gemini in a way I want it to respond I don't think it's way that works but we will try
 export default function Chat() {
   const { userLog } = useAuth();
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = createSignal(false);
   const [messages, setMessages] = createSignal<Message>({
-    message: "",
+    message: "Hello what is your problem",
     sender: Sender.System,
   });
-  const [inputMessage, setInputMessage] = createSignal("");
   const [err, setErr] = createSignal("");
   const [aiMessage, setAiMessage] = createSignal(false);
-  let previousMessages: Message[] = [];
+  const [previousMessages, setPreviousMessages] = createSignal<Message[]>([]);
 
   createEffect(() => {
-    previousMessages.push(messages());
+    // it is working
+    console.log("code is at createEffect");
+    setPreviousMessages((prev) => [...prev, messages()]);
   });
 
   const handleUserMessage = async () => {
     try {
       setAiMessage(true);
+      const body = JSON.stringify({ symptoms: messages().message });
+      console.log(body);
       const response = await apiRequest(`${HOME_URL}/health/remedies`, {
         method: "POST",
-        body: JSON.stringify({ symptopms: messages().message }),
+        body: body,
       });
       if (response.err) {
         setErr(response.err);
       }
       //this should createEffect if I am not wrong
-      setMessages(response.data.split("\n"));
+      setMessages({
+        message: response.data.response.replace(/\n/g, " "),
+        sender: Sender.System,
+      });
+
+      console.log("logging previous messages");
+      console.log(previousMessages());
     } catch (err: any) {
       setErr(err);
     } finally {
@@ -66,27 +76,20 @@ export default function Chat() {
     navigate("/login");
   };
 
-  function MessageUI({ text }: { text: string }) {
+  //add some form of animation for the dots
+  function MessageUI(input: Message) {
     return (
       <div
         class={`${
-          messages().sender === Sender.System
-            ? "bg-blue-500 text-white place-self-end"
-            : "bg-gray-200 text-gray-800 place-self-start"
-        } rounded-lg p-3 mb-2 max-w-xs break-words`}
+          input.sender === Sender.System
+            ? "bg-green-500/85 text-white ml-auto"
+            : "bg-gray-200 text-gray-800 mr-auto"
+        } rounded-lg p-3 mb-2 max-w-md break-words`}
       >
-        {text}
+        {input.message}
       </div>
     );
   }
-
-  const handleSendMessage = () => {
-    if (inputMessage().trim()) {
-      // Just updating UI, not adding functionality
-      setInputMessage("");
-    }
-  };
-
   // looking fine not bad but test it
   return (
     <>
@@ -111,13 +114,21 @@ export default function Chat() {
           </div>
         </div>
       </Show>
-      <div class=" min-h-[800px] max-h-[1000px] flex flex-col justify-around  ">
+      <div class=" min-h-screen flex flex-col  justify-between w-full max-w-4xl mx-auto px-4 ">
         {/* Chat container */}
         <div class="flex-1 flex flex-col p-4 overflow-hidden">
           {/* Messages area */}
           <div class="flex-1 overflow-y-auto  mb-4 p-2">
             <div class="flex flex-col gap-2">
-              <MessageUI text="Hi there! How can I help with your health concerns today?" />
+              {/* might be reactivity */}
+              <Index each={previousMessages()}>
+                {(message, _index) => (
+                  <MessageUI
+                    message={message().message}
+                    sender={message().sender}
+                  />
+                )}
+              </Index>
             </div>
             <Show when={err()}>
               <div class="bg-red-100 text-red-700 p-2 rounded mt-2">
@@ -127,20 +138,26 @@ export default function Chat() {
           </div>
 
           {/* Input area */}
-          <div class="fixed left-0 right-0 bottom-[10px] bg-white rounded-lg  p-2 flex items-end">
-            <textarea
-              value={inputMessage()}
-              onInput={(e) => setInputMessage(e.currentTarget.value)}
-              placeholder="Describe your symptoms..."
-              class=" font-medium   flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none "
-            />
-            <button
-              onClick={handleSendMessage}
-              disabled={aiMessage()}
-              class="ml-2 bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors disabled:bg-blue-300"
-            >
-              {aiMessage() ? <span>Sending...</span> : <span>Send</span>}
-            </button>
+          <div>
+            <div class="fixed left-0 right-0 bottom-[10px] bg-white rounded-lg  p-2 flex items-end ">
+              <textarea
+                value={
+                  messages().sender === Sender.User ? messages().message : ""
+                }
+                onChange={(e) => {
+                  setMessages({ message: e.target.value, sender: Sender.User });
+                }}
+                placeholder="Describe your symptoms..."
+                class="font-medium flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 resize-none min-h-[80px]"
+              />
+              <button
+                onClick={handleUserMessage}
+                disabled={aiMessage()}
+                class="cursor-pointer ml-2 bg-green-500 text-white rounded-lg px-4 py-2 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors disabled:bg-green-300 h-[40px] self-end"
+              >
+                {aiMessage() ? <span>Sending...</span> : <span>Send</span>}
+              </button>
+            </div>
           </div>
         </div>
       </div>

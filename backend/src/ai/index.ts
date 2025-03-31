@@ -92,7 +92,7 @@ botRouter.post("/remedies", async (req, res) => {
     res.json({ response })
   } catch (err) {
     console.log(err)
-    res.json({ err })
+    res.status(500).json({ err })
   }
 })
 
