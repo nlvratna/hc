@@ -131,71 +131,28 @@ healthRecordRoute.put("/update", async (req, res) => {
     res.status(500).json({ err })
   }
 })
-// not using these requests
-// id - medication id
-// change medication details
-// healthRecordRoute.patch("/change-medical-data/:id", async (req, res) => {
-//   try {
-//     const userId = req.user?.id
-//     const id = req.params.id
-//     if (!id || !userId) {
-//       res.status(400).json({ err: "user Id is not found" })
-//     }
-//     const data = req.body
-//     const medicaldata = await prisma.medication.update({
-//       where: { id: parseInt(id), healthRecord: { userId: userId } },
-//       data: data,
-//     })
-//     res.json(medicaldata)
-//   } catch (err) {
-//     res.status(500).json({ err })
-//   }
-// })
 //
-// // add new medical record
-// // not using this route
-// healthRecordRoute.post("/add-medical-data", async (req, res: Response) => {
-//   try {
-//     const userId = req.user?.id
-//     const data = req.body
-//     const medicalData = await prisma.medication.create({
-//       data: {
-//         name: data.name,
-//         prescription: data.prescription,
-//         reportedAt: data.reportedAt,
-//         healthRecord: { connect: { userId: userId } },
-//       },
-//       include: { healthRecord: true },
-//     })
-//     res.json(medicalData)
-//   } catch (err) {
-//     console.log(err)
-//     res.status(400).json({ err })
-//   }
-// })
-//
-// //id - medical data id to be deleted
-// // don't use this route and just put the record instead
-// healthRecordRoute.delete("/delete-medical-data/:id", async (req, res) => {
-//   try {
-//     const userId = req.user?.id
-//     const medicalDataId = parseInt(req.params.id)
-//     if (!userId || !medicalDataId) {
-//       res
-//         .status(403)
-//         .json({ err: "required field is not found userId/medicalDataId" })
-//     }
-//     await prisma.medication.delete({
-//       where: {
-//         id: medicalDataId,
-//         healthRecord: { userId: userId },
-//       },
-//     })
-//     res.status(204)
-//   } catch (err: any) {
-//     res.status(500).json({ err: err })
-//   }
-// })
+//id - medical data id to be deleted
+healthRecordRoute.delete("/delete-medical-data/:id", async (req, res) => {
+  try {
+    const userId = req.user?.id
+    const medicalDataId = parseInt(req.params.id)
+    if (!userId || !medicalDataId) {
+      res
+        .status(403)
+        .json({ err: "required field is not found userId/medicalDataId" })
+    }
+    console.log(medicalDataId)
+    await prisma.medication.delete({
+      where: {
+        id: medicalDataId,
+        healthRecord: { userId: userId },
+      },
+    })
+    res.status(204)
+  } catch (err: any) {
+    res.status(500).json({ err: err })
+  }
+})
 // //TODO : add delete route
-//
 export default healthRecordRoute

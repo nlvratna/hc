@@ -68,7 +68,8 @@ const EditIcon = () => (
 export default function HealthRecord() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [recordResponse] = createResource(getRecord);
+  //might have to use refetch() easy working
+  const [recordResponse, { refetch }] = createResource(getRecord);
   const [editing, setEditing] = createSignal(false);
   const [addingMedication, setAddingMedication] = createSignal(false);
   const [saving, setSaving] = createSignal(false);
@@ -83,13 +84,15 @@ export default function HealthRecord() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const { success, response } = await submitHealthRecord();
+      const success = await submitHealthRecord();
       //add here something
       if (success) {
         setEditing(false);
         setAddingMedication(false);
         setSkip(false);
-        initializeData(response); // still not persisitng data for new user
+        console.log("setting up refetch to get data");
+        refetch();
+        // referch was always the way to go
       }
     } catch (error) {
       console.error("Error saving health record:", error);
@@ -498,7 +501,10 @@ export default function HealthRecord() {
                                       <button
                                         class=" cursor-pointer px-3 py-1 text-red-500 border border-red-500 rounded hover:bg-red-50"
                                         onClick={() =>
-                                          deleteMedication(index())
+                                          deleteMedication(
+                                            index(),
+                                            medication.id as number,
+                                          )
                                         }
                                       >
                                         Delete

@@ -92,10 +92,19 @@ export const addMedication = () => {
   return true;
 };
 
-export const deleteMedication = (index: number) => {
+export const deleteMedication = async (index: number, medicalId: number) => {
   setData("details", "medication", (medications) =>
     medications.filter((_, i) => i !== index),
   );
+  const response = await apiRequest(
+    `${HOME_URL}/health-record/delete-medical-data/${medicalId}`,
+    {
+      method: "DELETE",
+    },
+  );
+  if (response.err) {
+    setData("err", response.err);
+  }
 };
 
 //send an api request to update in backend
@@ -123,16 +132,17 @@ export const submitHealthRecord = async () => {
       method: method,
       body: JSON.stringify(data.details),
     });
+    console.log("code was here");
     if (response.err) {
       setData("err", response.err);
-      return { success: false, response: null };
+      return false;
     }
 
     setData("isDataAvailable", true);
-    return { success: true, response: response.data };
+    return true;
   } catch (error: any) {
     setData("err", error.message || "Failed to submit health record");
-    return { success: false, response: null };
+    return false;
   } finally {
     setData("submitted", false);
   }
