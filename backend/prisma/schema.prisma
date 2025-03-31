@@ -41,4 +41,6 @@ model medication {
     prescription   String
     healthRecord   healthRecord @relation(fields: [healthRecordId], references: [id])
     healthRecordId Int
+
+    @@unique([name, healthRecordId])
 }

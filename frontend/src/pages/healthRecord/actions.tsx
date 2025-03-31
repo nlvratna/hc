@@ -9,6 +9,7 @@ export enum Gender {
 }
 
 export interface Medication {
+  id?: number;
   name: string;
   prescription: string;
   reportedAt: Date;
@@ -16,6 +17,7 @@ export interface Medication {
 
 export interface HealthRecordInput {
   details: {
+    id?: number;
     age: Date | null;
     gender: Gender;
     medication: Medication[];
@@ -52,11 +54,14 @@ export const initializeData = (data: null | any) => {
   if (data === null) {
     setData("isDataAvailable", false);
   } else {
+    console.log("at initilization");
+    console.log(data);
     setData("isDataAvailable", true);
     setData("details", {
+      id: data.healthRecord.id ?? 0,
       age: data.healthRecord.age ? new Date(data.healthRecord.age) : null,
       gender: data.healthRecord.gender || Gender.Male,
-      medication: data.healthRecord.medication || [],
+      medication: data.healthRecord.symptoms || [],
     });
   }
 };
@@ -94,11 +99,7 @@ export const deleteMedication = (index: number) => {
 };
 
 //send an api request to update in backend
-export const updateMedication = (
-  index: number,
-  medicationId: number,
-  updatedMed: Medication,
-) => {
+export const updateMedication = (index: number, updatedMed: Medication) => {
   setData("details", "medication", (medications) => {
     const newMedications = [...medications];
     newMedications[index] = updatedMed;
@@ -106,30 +107,32 @@ export const updateMedication = (
   });
 };
 
+// is the new data available to seee need to check that and may be initialize new one
 export const submitHealthRecord = async () => {
   try {
     setData("submitted", true);
 
-    //if user skips the endpoint is going to be the same after handle that
     const endpoint = !data.isDataAvailable
       ? `${HOME_URL}/health-record/create`
       : `${HOME_URL}/health-record/update`;
 
-    const { err } = await apiRequest(endpoint, {
-      method: "POST",
+    const method = !data.isDataAvailable ? "POST" : "PUT";
+    console.log("at submit method");
+    console.log(data.details);
+    const response = await apiRequest(endpoint, {
+      method: method,
       body: JSON.stringify(data.details),
     });
-
-    if (err) {
-      setData("err", err);
-      return false;
+    if (response.err) {
+      setData("err", response.err);
+      return { success: false, response: null };
     }
 
     setData("isDataAvailable", true);
-    return true;
+    return { success: true, response: response.data };
   } catch (error: any) {
     setData("err", error.message || "Failed to submit health record");
-    return false;
+    return { success: false, response: null };
   } finally {
     setData("submitted", false);
   }

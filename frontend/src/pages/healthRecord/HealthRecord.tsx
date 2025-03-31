@@ -1,4 +1,3 @@
-//still some methods like add new medication for an exising one delete medication  that is existing update the update medication function
 import {
   createResource,
   createSignal,
@@ -23,7 +22,7 @@ import {
   initializeData,
 } from "./actions";
 import { Gender } from "./types";
-import { useLocation } from "@solidjs/router";
+import { useLocation, useNavigate } from "@solidjs/router";
 
 const getRecord = async () => {
   try {
@@ -65,9 +64,10 @@ const EditIcon = () => (
     />
   </svg>
 );
-
+//add a popup that data is saved and for a new uer add a continue which on click should get to the next while showing the healtRecord
 export default function HealthRecord() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [recordResponse] = createResource(getRecord);
   const [editing, setEditing] = createSignal(false);
   const [addingMedication, setAddingMedication] = createSignal(false);
@@ -75,7 +75,7 @@ export default function HealthRecord() {
   const [editingMedication, setEditingMedication] = createSignal(false);
   const [skip, setSkip] = createSignal(false);
 
-  //working and add skip button later
+  //skip button is working
   if (location.state == "signup") {
     setEditing(true);
     setSkip(true);
@@ -83,11 +83,13 @@ export default function HealthRecord() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const success = await submitHealthRecord();
+      const { success, response } = await submitHealthRecord();
       //add here something
       if (success) {
         setEditing(false);
         setAddingMedication(false);
+        setSkip(false);
+        initializeData(response); // still not persisitng data for new user
       }
     } catch (error) {
       console.error("Error saving health record:", error);
@@ -124,7 +126,13 @@ export default function HealthRecord() {
               </div>
             </Match>
 
-            <Match when={recordResponse() || !data.isDataAvailable}>
+            <Match
+              when={
+                recordResponse() ||
+                !data.isDataAvailable ||
+                data.isDataAvailable
+              }
+            >
               <div class="flex flex-col justify-evenly m-8">
                 {/* Header */}
                 <div class="bg-green-500 text-white p-4 flex justify-between items-center w-full">
@@ -147,7 +155,14 @@ export default function HealthRecord() {
                         </Show>
                         <button
                           class=" cursor-pointer bg-white text-green-500 p-2 rounded hover:bg-green-100 transition duration-200"
-                          onClick={handleSave}
+                          onClick={
+                            skip()
+                              ? // seperate function please
+                                () => {
+                                  navigate("/chat");
+                                }
+                              : handleSave
+                          }
                           disabled={saving()}
                         >
                           {skip() ? "skip" : "save"}
@@ -445,11 +460,7 @@ export default function HealthRecord() {
                                             ...medication,
                                             name: e.target.value,
                                           };
-                                          updateMedication(
-                                            index(),
-                                            medication.id,
-                                            updated,
-                                          );
+                                          updateMedication(index(), updated);
                                         }}
                                       />
                                       <textarea
@@ -461,11 +472,7 @@ export default function HealthRecord() {
                                             ...medication,
                                             prescription: e.target.value,
                                           };
-                                          updateMedication(
-                                            index(),
-                                            medication.id,
-                                            updated,
-                                          );
+                                          updateMedication(index(), updated);
                                         }}
                                       ></textarea>
                                       <input
@@ -483,17 +490,13 @@ export default function HealthRecord() {
                                               e.target.value,
                                             ),
                                           };
-                                          updateMedication(
-                                            index(),
-                                            medication.id,
-                                            updated,
-                                          );
+                                          updateMedication(index(), updated);
                                         }}
                                       />
                                     </div>
                                     <div class="flex justify-end gap-2">
                                       <button
-                                        class="px-3 py-1 text-red-500 border border-red-500 rounded hover:bg-red-50"
+                                        class=" cursor-pointer px-3 py-1 text-red-500 border border-red-500 rounded hover:bg-red-50"
                                         onClick={() =>
                                           deleteMedication(index())
                                         }
@@ -501,7 +504,7 @@ export default function HealthRecord() {
                                         Delete
                                       </button>
                                       <button
-                                        class="px-3 py-1 text-gray-500 border border-gray-500 rounded hover:bg-gray-50"
+                                        class=" cursor-pointer px-3 py-1 text-gray-500 border border-gray-500 rounded hover:bg-gray-50"
                                         onClick={() =>
                                           setEditingMedication(false)
                                         }
@@ -534,6 +537,16 @@ export default function HealthRecord() {
                       {saving() ? "Creating Record..." : "Create Health Record"}
                     </button>
                   </div>
+                </Show>
+                <Show
+                  when={!editing() && !skip() && location.state == "signup"}
+                >
+                  <button
+                    class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-200"
+                    onClick={() => navigate("/chat")}
+                  >
+                    continue
+                  </button>
                 </Show>
               </div>
             </Match>

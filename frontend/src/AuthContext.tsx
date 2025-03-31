@@ -5,7 +5,7 @@ import {
   ParentComponent,
   useContext,
 } from "solid-js";
-import { tokenExpire } from "./utils";
+import { ensureValidToken } from "./utils";
 
 interface AuthContextType {
   userLog: () => boolean;
@@ -21,50 +21,41 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
 });
 
-//use createMutable
-const AuthProvider: ParentComponent = (props) => {
+export const AuthProvider: ParentComponent = (props) => {
   const [user, setUser] = createSignal(null);
-  const [userLog, setUserLog] = createSignal(false);
+  const [isLoggedIn, setIsLoggedIn] = createSignal(false);
 
   const login = (userData: any) => {
     setUser(userData);
-    setUserLog(true);
+    setIsLoggedIn(true);
   };
 
   const logout = () => {
     localStorage.removeItem("token");
     setUser(null);
-    setUserLog(false);
+    setIsLoggedIn(false);
   };
 
-  // const checkUserLog = async () => {
-  //   // may be not useful
-  //   // not useful
-  //   try {
-  //     await tokenExpire();
-  //     setUserLog(true);
-  //   } catch (err: any) {
-  //     setUserLog(false);
-  //   }
-  // };
-
-  onMount(async () => tokenExpire());
-
-  // onCleanup(() => logout());
+  // Check login status on mount
+  onMount(async () => {
+    const hasValidToken = await ensureValidToken();
+    setIsLoggedIn(hasValidToken);
+  });
 
   return (
-    <AuthContext.Provider value={{ userLog, user, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        userLog: () => isLoggedIn(),
+        user: () => user(),
+        login,
+        logout,
+      }}
+    >
       {props.children}
     </AuthContext.Provider>
   );
-};
+}; //use createMutable
 
-const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
+export const useAuth = () => {
+  return useContext(AuthContext);
 };
-
-export { AuthProvider, useAuth };

@@ -1,12 +1,15 @@
 import { jwtDecode } from "jwt-decode";
 import { HOME_URL } from "./Config";
 
-//add jwt decode and fetch new jwt token logic
 export const apiRequest = async (url: string, option = {}) => {
   try {
-    await tokenExpire();
+    // Check and refresh token if needed
+    const tokenValid = await ensureValidToken();
+    if (!tokenValid) {
+      return { data: null, err: "Authentication required" };
+    }
+
     const token = localStorage.getItem("token");
-    console.log({ url: url, option });
     const response = await fetch(url, {
       headers: {
         authorization: `Bearer ${token}`,
@@ -15,48 +18,84 @@ export const apiRequest = async (url: string, option = {}) => {
       credentials: "include",
       ...option,
     });
-    const data = await response.json();
 
+    const responseData = await response.json();
     if (!response.ok) {
-      return { data: null, err: data.err };
+      return { data: null, err: responseData.err || response.statusText };
     }
-    return { data: data, err: null };
+
+    return { data: responseData, err: null };
   } catch (err: any) {
-    return { data: null, err: err };
+    return { data: null, err: err.message || "Request failed" };
   }
 };
 
-export const tokenExpire = async () => {
+// Improved token management
+export const ensureValidToken = async (): Promise<boolean> => {
   try {
-    console.log("code was here");
     const token = localStorage.getItem("token");
     if (!token) {
-      throw new Error("token is not available");
+      return false; // No token available, authentication required
     }
-    const decoded = jwtDecode(token);
-    const exp = new Date(decoded.exp! * 1000);
-    const now = new Date();
-    //minor major issue
-    const difference = Math.floor(
-      (-now.getTime() + exp.getTime()) / (1000 * 60),
-    );
-    if (difference <= 3) {
-      console.log("request to get new token is sent");
-      const response = await fetch("http://localhost:4840/auth/access-token", {
-        headers: {
-          authorization: `Bearer ${token}`,
-        },
-        credentials: "include",
-      });
-      if (response.status === 303) {
-        alert("session expired please login again");
-        window.location.href = "/login";
-      }
-      const data = await response.json();
-      console.log(data);
-      localStorage.setItem("token", data.accessToken);
+
+    // Parse token
+    const decoded: any = jwtDecode(token);
+    if (!decoded || typeof decoded.exp !== "number") {
+      localStorage.removeItem("token"); // Invalid token format
+      return false;
     }
+
+    // Check expiration
+    const expTime = decoded.exp * 1000; // Convert to milliseconds
+    const currentTime = Date.now();
+    const minutesRemaining = Math.floor((expTime - currentTime) / (1000 * 60));
+
+    // Refresh if less than 3 minutes remaining
+    if (minutesRemaining <= 3) {
+      return await refreshToken(token);
+    }
+
+    return true; // Token is valid and not expiring soon
   } catch (err: any) {
-    throw new Error("cannot create new token");
+    console.error("Token validation error:", err);
+    localStorage.removeItem("token");
+    return false;
   }
 };
+
+// Separated token refresh logic
+async function refreshToken(currentToken: string): Promise<boolean> {
+  try {
+    const response = await fetch("http://localhost:4840/auth/access-token", {
+      headers: {
+        authorization: `Bearer ${currentToken}`,
+      },
+      credentials: "include",
+    });
+
+    if (response.status === 303) {
+      // Session expired
+      localStorage.removeItem("token");
+      alert("Session expired, please login again");
+      window.location.href = "/login";
+      return false;
+    }
+
+    if (!response.ok) {
+      throw new Error(`Token refresh failed: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    if (!data.accessToken) {
+      throw new Error("No token received from server");
+    }
+
+    localStorage.setItem("token", data.accessToken);
+    return true;
+  } catch (err) {
+    console.error("Token refresh failed:", err);
+    localStorage.removeItem("token");
+    return false;
+  }
+}
+//add jwt decode and fetch new jwt token logic

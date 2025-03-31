@@ -3,7 +3,6 @@ import { HOME_URL } from "../Config";
 import { Card } from "../components/Card";
 import { Input } from "../components/Input";
 import { useAuth } from "../AuthContext";
-import HealthRecord from "./healthRecord/HealthRecord";
 import { useNavigate } from "@solidjs/router";
 
 interface Props {
@@ -11,7 +10,7 @@ interface Props {
   email: string;
   password: string;
 }
-
+// if user is logged he can not come to this page
 export default function SignUp() {
   const { login } = useAuth();
   const [data, setData] = createSignal<Props>({
